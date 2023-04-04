@@ -3,7 +3,9 @@ const mongoose = require("mongoose");
 const UserSchema = new mongoose.Schema({
   userName: {
     type: String,
+    unique: true,
     trim: true,
+    lowercase: true,
     required: [true, `Please Enter The UserName`],
     unique: [true, `The UserName Already Exist`],
     maxLength: [32, `The Max length must be 32`],

@@ -7,8 +7,10 @@ firebase.initializeApp({
 });
 
 const db = firebase.firestore();
+db.settings({ ignoreUndefinedProperties: true });
 
-const amountLimitColloction = async (data) => {
+// This function will handle the both collections => amount_limit, transaction_rate_limit
+const limitConfig = async (data) => {
   // Get the data from a specific collection
   const getDoc = await db.collection(data.collection).doc(data.doc).get();
 
@@ -32,8 +34,8 @@ const amountLimitColloction = async (data) => {
     data.enable = true;
   }
 
-  // update the values of the in the collection and docs
-  const amountLimit = await db
+  // update the values in the collection and docs
+  const res = await db
     .collection(data.collection)
     .doc(data.doc)
     .update({
@@ -41,7 +43,78 @@ const amountLimitColloction = async (data) => {
       enable: data.enable,
     });
 
-  console.log(amountLimit);
+  return res;
 };
 
-module.exports = { amountLimitColloction };
+const userBotConfigModule = async (data) => {
+  // Get the data from a specific collection
+  const getDoc = await db.collection(data.collection).doc(data.doc).get();
+
+  // check if the doc exist
+  if (!getDoc.exists) {
+    throw new ErrorResponse(
+      `The Doc ${data.doc} Not exist in the configuration Please try again with a valid data`
+    );
+  }
+
+  // check the enable data if its boolean and convert it to the Boolean Data Type
+  if (data.enable === "false") {
+    data.enable = false;
+  } else {
+    data.enable = true;
+  }
+
+  // update the values in the collection and docs
+  const res = await db.collection(data.collection).doc(data.doc).update({
+    enable: data.enable,
+  });
+
+  return res;
+};
+
+// this function will return the docs in a specific collection
+const getDocs = async (colcName) => {
+  const balanceDocs = db.collection(colcName);
+
+  const snapShot = await balanceDocs.get();
+
+  // this data will include the whole docs arrays
+  let data = [];
+
+  // console.log(snapShot);
+  snapShot.forEach((doc) => {
+    const docId = doc.id;
+    data.push({ id: docId, docsData: doc.data() });
+  });
+
+  return data;
+};
+
+const updateEngine = async (data) => {
+  // Get the data from a specific collection
+  const getDoc = await db.collection(data.collection).doc(data.doc).get();
+
+  if (!getDoc.exists) {
+    throw new ErrorResponse(
+      `The Doc ${data.doc} Not exist in the configuration Please try again with a valid data`
+    );
+  }
+
+  // check the enable data if its boolean and convert it to the Boolean Data Type
+  if (!data.enable) {
+    data.enable = false;
+  } else {
+    data.enable = true;
+  }
+
+  // update the values in the collection and docs
+  const res = await db.collection(data.collection).doc(data.doc).update({
+    enable: data.enable,
+    name: data.name,
+    prefix: data.prefix,
+  });
+
+  return res;
+};
+
+module.exports = { limitConfig, getDocs, userBotConfigModule, updateEngine };

@@ -9,9 +9,16 @@ const {
   deleteUser,
   addChatId,
   getUsers,
+  updateUserName,
 } = require("./controllers/users");
 
-const { updateAmountLimit } = require("./controllers/botConfig");
+const {
+  updateAmountLimit,
+  updateTransactionRateLimit,
+  getBalances,
+  updateUserAccount,
+  updateEngines,
+} = require("./controllers/botConfig");
 
 server();
 connect();
@@ -48,10 +55,34 @@ bot.command("deleteUser", async (ctx) => {
 bot.command("getUsers", async (ctx) => {
   await getUsers(ctx);
 });
+// update the userName of the telegram account
+bot.command("updateUser", async (ctx) => {
+  await updateUserName(ctx);
+});
+
+// ******** The config of the Market Maker
+
 // listen the message events
 bot.command("amount_limit", async (ctx) => {
   await updateAmountLimit(ctx);
 });
+
+bot.command("transaction_rate_limit", async (ctx) => {
+  await updateTransactionRateLimit(ctx);
+});
+
+bot.command("Getbalances", async (ctx) => {
+  await getBalances(ctx);
+});
+
+bot.command("users", async (ctx) => {
+  await updateUserAccount(ctx);
+});
+
+bot.command("engines", async (ctx) => {
+  await updateEngines(ctx);
+});
+
 bot.on("message", (ctx) => {});
 
 // Catch the Errors

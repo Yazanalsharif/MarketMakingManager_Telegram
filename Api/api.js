@@ -65,7 +65,7 @@ router.post(
 );
 
 // @Description              Get the active users from the telegram.
-// @Method                   Post /v1/users
+// @Method                   GET /v1/users
 // @access                   Public
 router.get(
   "/users",

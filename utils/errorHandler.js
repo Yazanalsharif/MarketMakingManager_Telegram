@@ -5,6 +5,7 @@ const ErrorResponse = require("./ErrorResponse");
 // Handle The error using the bot
 const errorHandlerBot = (ctx, err) => {
   let error = { ...err };
+  console.log(err);
   error.message = err.message;
 
   if (err.name === "CastError") {

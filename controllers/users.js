@@ -2,6 +2,7 @@ const chalk = require("chalk");
 const User = require("../models/User");
 const { errorHandlerBot } = require("../utils/errorHandler");
 const ErrorResponse = require("../utils/ErrorResponse");
+const isAuthorized = require("../middlewares/authorized");
 
 // @Description             insert new user to the data base throwgh The Telegram Bot
 // access                   Admin
@@ -11,6 +12,8 @@ const addUser = async (ctx, bot) => {
     const text = ctx.update.message.text;
     const data = text.split(" ");
     const userName = data[1];
+
+    await isAuthorized(ctx);
 
     if (!isNaN(userName)) {
       console.log("Please write a correct userName");
@@ -48,14 +51,20 @@ const deleteUser = async (ctx) => {
 
     const userName = data[1];
 
+    // check if the user exist in the database and He is authorized to do this operation
+    await isAuthorized(ctx);
+
+    if (!userName) {
+      throw new ErrorResponse(`Please Enter a valid user name`);
+    }
+
     // find if the user exist remove it
     const user = await User.findOneAndDelete({ userName });
 
-    console.log(user);
-
     if (!user) {
-      console.log(`The user: ${userName} doesn't exist in the database`);
-      return ctx.reply(`The user: ${userName} doesn't exist in the database`);
+      throw new ErrorResponse(
+        `The user: ${userName} doesn't exist in the database`
+      );
     }
 
     ctx.reply(`The User has been Deleted...`);
@@ -63,7 +72,7 @@ const deleteUser = async (ctx) => {
     // send logs with the error message
     console.log(err.message);
     // send to the admin through the telegram chat
-    errorHandlerBot(err);
+    errorHandlerBot(ctx, err);
   }
 };
 
@@ -100,6 +109,9 @@ const addChatId = async (ctx) => {
 // access                   Admin
 const getUsers = async (ctx) => {
   try {
+    // check if the user exist in the database and He is authorized to do this operation
+    await isAuthorized(ctx);
+
     const users = await User.find({});
     // create message
     let message = "";
@@ -120,4 +132,37 @@ const getUsers = async (ctx) => {
   }
 };
 
-module.exports = { addUser, deleteUser, getUsers, addChatId };
+// @Description             Update the UserName of the existing user
+// access                   Admin
+const updateUserName = async (ctx) => {
+  try {
+    // check if the user exist in the database and He is authorized to do this operation
+    await isAuthorized(ctx);
+
+    // find the userName and update it
+    const text = ctx.update.message.text;
+    const data = text.split(" ");
+
+    const oldUserName = data[1];
+
+    let user = await User.findOne({ userName: oldUserName });
+
+    if (!user) {
+      console.log(`The user: ${oldUserName} doesn't exist`);
+      throw new ErrorResponse(`The user: ${oldUserName} doesn't exist`);
+    }
+
+    user.userName = data[2];
+
+    await user.save();
+
+    ctx.reply(
+      `The userName has been update from ${oldUserName} to ${user.userName}`
+    );
+  } catch (err) {
+    errorHandlerBot(ctx, err);
+    console.log(err);
+  }
+};
+
+module.exports = { addUser, deleteUser, getUsers, addChatId, updateUserName };
