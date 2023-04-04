@@ -1,7 +1,7 @@
 const chalk = require("chalk");
 const { errorHandlerBot } = require("../utils/errorHandler");
 const ErrorResponse = require("../utils/ErrorResponse");
-const { authorized } = require("../middlewares/authorized");
+const isAuthorized = require("../middlewares/authorized");
 const {
   limitConfig,
   getDocs,
@@ -13,6 +13,7 @@ const {
 // access                   Admin
 const updateAmountLimit = async (ctx) => {
   try {
+    await isAuthorized(ctx);
     // get the text from the command
     const text = ctx.update.message.text;
     // seperate the data from the telegram command
@@ -67,6 +68,8 @@ const updateTransactionRateLimit = async (ctx) => {
     // get the collection (command)
     const collection = data[0].substring(1);
 
+    await isAuthorized(ctx);
+
     if (!data[1]) {
       throw new ErrorResponse(
         `Please Enter the doc name as the following example\n/amount_limit dailyLimit 1000 false`
@@ -108,6 +111,8 @@ const updateTransactionRateLimit = async (ctx) => {
 // access                   Admin
 const getBalances = async (ctx) => {
   try {
+    await isAuthorized(ctx);
+
     const docs = await getDocs("balance");
 
     let message = "";
@@ -133,6 +138,7 @@ const getBalances = async (ctx) => {
 // update the accounts in the MM configurations. Which the accounts currently is a users
 const updateUserAccount = async (ctx) => {
   try {
+    await isAuthorized(ctx);
     // get the text from the command
     const text = ctx.update.message.text;
     // seperate the data from the telegram command
@@ -181,6 +187,7 @@ const updateUserAccount = async (ctx) => {
 
 const updateEngines = async (ctx) => {
   try {
+    await isAuthorized(ctx);
     // get the text from the command
     const text = ctx.update.message.text;
     // seperate the data from the telegram command
