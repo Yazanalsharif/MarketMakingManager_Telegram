@@ -3,6 +3,10 @@ const User = require("../models/User");
 const { errorHandlerBot } = require("../utils/errorHandler");
 const ErrorResponse = require("../utils/ErrorResponse");
 const isAuthorized = require("../middlewares/authorized");
+const { firebase } = require("../config/db");
+const axios = require("axios");
+
+const auth = firebase.auth();
 
 // @Description             insert new user to the data base throwgh The Telegram Bot
 // access                   Admin
@@ -162,6 +166,23 @@ const updateUserName = async (ctx) => {
   } catch (err) {
     errorHandlerBot(ctx, err);
     console.log(err);
+  }
+};
+
+// @Description             sign the user in to the telegram configuration
+// access                   Public
+const signInUser = async () => {
+  try {
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.API_KEY_FIREBASE}`;
+
+    // const user = await auth.getUserByEmail("yazan.s@burency.com");
+    const res = await axios.post(url, {
+      email: "yazan.s2@burency.com",
+      password: "Yazan2000$$12!",
+      returnSecureToken: true,
+    });
+  } catch (err) {
+    console.log(err.events);
   }
 };
 

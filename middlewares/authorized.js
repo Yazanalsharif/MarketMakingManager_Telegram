@@ -2,7 +2,13 @@ const User = require("../models/User");
 const ErrorResponse = require("../utils/ErrorResponse");
 
 const isUserExist = async (ctx) => {
-  const fromUser = ctx.update.message.from.username;
+  let fromUser;
+
+  // this will be deleted after finishing the bot
+
+  fromUser =
+    ctx.update.message?.from.username ||
+    ctx.update.callback_query?.from.username;
 
   const isFromUser = await User.findOne({ userName: fromUser });
 

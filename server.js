@@ -23,6 +23,13 @@ const server = () => {
 
   app.use(errorHandler);
 
+  app.use("*", async (req, res) => {
+    res.status(400).json({
+      success: false,
+      msg: "There is end point it doesn't Exist",
+    });
+  });
+
   const launch = app.listen(port, () => {
     console.log(
       chalk.white.bgYellow.bold(

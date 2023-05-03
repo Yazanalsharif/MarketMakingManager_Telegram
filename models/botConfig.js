@@ -1,13 +1,15 @@
 const firebase = require("firebase-admin");
 const serviceAccount = require("../config/test-app-config.json");
+const { fireStoreConnect } = require("../config/db");
 const ErrorResponse = require("../utils/ErrorResponse");
+const { db } = require("../config/db");
+// firebase.initializeApp({
+//   credential: firebase.credential.cert(serviceAccount),
+// });
 
-firebase.initializeApp({
-  credential: firebase.credential.cert(serviceAccount),
-});
+// const db = firebase.firestore();
 
-const db = firebase.firestore();
-db.settings({ ignoreUndefinedProperties: true });
+// db.settings({ ignoreUndefinedProperties: true });
 
 // This function will handle the both collections => amount_limit, transaction_rate_limit
 const limitConfig = async (data) => {
@@ -117,4 +119,30 @@ const updateEngine = async (data) => {
   return res;
 };
 
-module.exports = { limitConfig, getDocs, userBotConfigModule, updateEngine };
+const updateLimitOrder = async (data) => {
+  // Get the data from a specific collection
+  const getDoc = await db.collection(data.collection).doc(data.doc).get();
+  // check the data here
+  if (!getDoc.exists) {
+    throw new ErrorResponse(
+      `The Doc ${data.doc} Not exist in the configuration Please try again with a valid data`
+    );
+  }
+
+  const res = await db.collection(data.collection).doc(data.doc).update({
+    amount: data.amount,
+    max: data.max,
+    min: data.min,
+    precent: data.precent,
+  });
+
+  return res;
+};
+
+module.exports = {
+  limitConfig,
+  getDocs,
+  userBotConfigModule,
+  updateEngine,
+  updateLimitOrder,
+};

@@ -1,18 +1,24 @@
 const chalk = require("chalk");
 const { errorHandlerBot } = require("../utils/errorHandler");
 const ErrorResponse = require("../utils/ErrorResponse");
-const { authorized } = require("../middlewares/authorized");
+const isAuthorized = require("../middlewares/authorized");
+const { Telegraf, Scenes } = require("telegraf");
+const Wizard = Scenes.WizardScene;
 const {
   limitConfig,
   getDocs,
   userBotConfigModule,
   updateEngine,
+  updateLimitOrder,
 } = require("../models/botConfig");
+
+const { checkNumber, checkWord } = require("../utils/helper");
 
 // @Description             Change the amount_limit in the botConfig
 // access                   Admin
 const updateAmountLimit = async (ctx) => {
   try {
+    await isAuthorized(ctx);
     // get the text from the command
     const text = ctx.update.message.text;
     // seperate the data from the telegram command
@@ -67,6 +73,8 @@ const updateTransactionRateLimit = async (ctx) => {
     // get the collection (command)
     const collection = data[0].substring(1);
 
+    await isAuthorized(ctx);
+
     if (!data[1]) {
       throw new ErrorResponse(
         `Please Enter the doc name as the following example\n/amount_limit dailyLimit 1000 false`
@@ -108,6 +116,8 @@ const updateTransactionRateLimit = async (ctx) => {
 // access                   Admin
 const getBalances = async (ctx) => {
   try {
+    await isAuthorized(ctx);
+
     const docs = await getDocs("balance");
 
     let message = "";
@@ -133,6 +143,7 @@ const getBalances = async (ctx) => {
 // update the accounts in the MM configurations. Which the accounts currently is a users
 const updateUserAccount = async (ctx) => {
   try {
+    await isAuthorized(ctx);
     // get the text from the command
     const text = ctx.update.message.text;
     // seperate the data from the telegram command
@@ -181,6 +192,7 @@ const updateUserAccount = async (ctx) => {
 
 const updateEngines = async (ctx) => {
   try {
+    await isAuthorized(ctx);
     // get the text from the command
     const text = ctx.update.message.text;
     // seperate the data from the telegram command
@@ -219,10 +231,46 @@ const updateEngines = async (ctx) => {
   }
 };
 
+// handle the limit order amount.
+const limitOrder = async (ctx) => {
+  try {
+    // new amount
+    const amount = parseFloat(ctx.wizard.state.data.amount);
+    const precent = parseFloat(ctx.wizard.state.data.precent);
+    console.log("The amount is", ctx.wizard.state.data.amount);
+    console.log("The precent is", ctx.wizard.state.data.precent);
+
+    const min = amount - (amount * precent) / 100;
+
+    const max = amount + (amount * precent) / 100;
+
+    const data = {
+      collection: "limit_order",
+      doc: "orders",
+      amount,
+      max,
+      min,
+      precent: precent,
+    };
+
+    const res = await updateLimitOrder(data);
+
+    if (!res) {
+      throw new ErrorResponse(
+        `There is an error here, Please contact with the Admin`
+      );
+    }
+  } catch (err) {
+    console.log(err);
+    errorHandlerBot(ctx, err);
+  }
+};
+
 module.exports = {
   updateAmountLimit,
   updateTransactionRateLimit,
   getBalances,
   updateUserAccount,
   updateEngines,
+  limitOrder,
 };

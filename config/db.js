@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const chalk = require("chalk");
+const firebase = require("firebase-admin");
+const serviceAccount = require("./test-app-config.json");
 
 const connecteDB = async () => {
   // to avoid a depractionWarning
@@ -12,4 +14,11 @@ const connecteDB = async () => {
   );
 };
 
-module.exports = connecteDB;
+firebase.initializeApp({
+  credential: firebase.credential.cert(serviceAccount),
+});
+
+const db = firebase.firestore();
+db.settings({ ignoreUndefinedProperties: true });
+
+module.exports = { connecteDB, db, firebase };

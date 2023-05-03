@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { db } = require("../config/db");
 
 const UserSchema = new mongoose.Schema({
   userName: {
@@ -19,6 +20,7 @@ const UserSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+// Also the operations for the Admins over firestore will be here
 
 const User = mongoose.model("User", UserSchema);
 

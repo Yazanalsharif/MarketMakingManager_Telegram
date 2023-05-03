@@ -3,18 +3,35 @@ const express = require("express");
 const ErrorResponse = require("../utils/ErrorResponse");
 const { Telegraf } = require("telegraf");
 const asyncHandler = require("../middlewares/asyncHandler");
+const multer = require("multer");
+const { sendMail } = require("../utils/sendEmail");
+const { db } = require("../config/db");
 
 const router = express.Router();
 
 const bot = new Telegraf(process.env.BOT_KEY);
 
-// @Description              End Point for letting the bot send Message for a specific user
+const upload = multer({
+  limits: {
+    fileSize: 1000000,
+  },
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(docx|pdf|xlsx|txt)$/)) {
+      return cb(new Error("you Must Upload docx, pdf, xlsx or txt"));
+    }
+    cb(undefined, true);
+  },
+});
+
+// @Description              End Point for letting the bot send Message and attachements for a specific telegram user
 // @Method                   Post /v1/sendMessage/:userName
 // @access                   Public
 router.post(
   "/sendMessage/:userName",
+  upload.single("report"),
   asyncHandler(async (req, res, next) => {
-    const message = req.body.message;
+    const message = req.query.text;
+    const type = req.query.type;
 
     const user = await User.findOne({ userName: req.params.userName });
 
@@ -27,7 +44,21 @@ router.post(
       );
     }
 
-    bot.telegram.sendMessage(user.chat_id, message);
+    if (!req.file) {
+      return next(new ErrorResponse("Please Enter the file throgh form-data"));
+    }
+
+    if (message) {
+      await bot.telegram.sendMessage(
+        user.chat_id,
+        `Report Message\n\n${message}`
+      );
+    }
+
+    await bot.telegram.sendDocument(user.chat_id, {
+      source: req.file.buffer,
+      filename: req.file.originalname,
+    });
 
     res.status(200).json({
       success: true,
@@ -36,6 +67,52 @@ router.post(
     });
   })
 );
+
+// @Description              End Point for letting the bot send Message and attachements for via Email
+// @Method                   Post /v1/sendEmail
+// @access                   Public
+// router.post(
+//   "/sendEmail",
+//   upload.single("report"),
+//   asyncHandler(async (req, res, next) => {
+//     const message = req.query.text;
+//     const type = req.query.type;
+//     const emails = [];
+
+//     const snapshotEmails = await db
+//       .collection("Report")
+//       .where("dest", "==", "email")
+//       .get();
+
+//     if (snapshotEmails.empty) {
+//       return next(
+//         new ErrorResponse(
+//           "There is no emails to send in, Please config the email feature throgh telegram bot"
+//         )
+//       );
+//     }
+//     // get the emails addresses
+//     snapshotEmails.forEach((doc) => {
+//       emails.push(doc.data().user_address);
+//     });
+
+//     console.log(req.file);
+
+//     // if (!req.file) {
+//     //   return next(new ErrorResponse("Please Enter the file throgh form-data"));
+//     // }
+
+//     // emails.forEach(async (email) => {
+//     //   await sendMail({ email, name: type, message });
+//     // });
+
+//     // res.status(200).json({
+//     //   success: true,
+//     //   users: user,
+//     //   message,
+//     // });
+//   })
+// );
 
 // @Description              End Point for letting the bot sending to the users
 // @Method                   Post /v1/sendMessage
