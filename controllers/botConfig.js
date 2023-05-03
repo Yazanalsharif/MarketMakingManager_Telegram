@@ -2,11 +2,10 @@ const chalk = require("chalk");
 const { errorHandlerBot } = require("../utils/errorHandler");
 const ErrorResponse = require("../utils/ErrorResponse");
 const isAuthorized = require("../middlewares/authorized");
-<<<<<<< HEAD
+
 const { Telegraf, Scenes } = require("telegraf");
 const Wizard = Scenes.WizardScene;
-=======
->>>>>>> 051ca35bba25792d58e91fcc68f8fc877ee56719
+
 const {
   limitConfig,
   getDocs,
