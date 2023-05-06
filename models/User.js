@@ -24,4 +24,40 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", UserSchema);
 
-module.exports = User;
+// update the admins and add the sign in proberities
+const updateAdmin = async (data) => {
+  const adminsCollection = db.collection("Admins");
+
+  const adminsSnapShot = await adminsCollection
+    .where("email", "==", data.email)
+    .get();
+
+  if (adminsSnapShot.empty) {
+    throw new Error(
+      "The data doesn't Exist in the Admin Collection, Please register using the email address"
+    );
+  }
+
+  // the first doc id in the collection
+  let docId;
+
+  adminsSnapShot.forEach((doc) => {
+    // store the first doc id in the docId
+    docId = doc.id;
+  });
+
+  const res = await adminsCollection.doc(docId).update({
+    chat_id: data.chat_id,
+    telegram_user: data.userName,
+    refresh_token: data.refresh_token,
+    token: data.token,
+  });
+
+  if (!res.writeTime) {
+    throw new Error(
+      "Error: Server Error, Please contact the admin for more information."
+    );
+  }
+};
+
+module.exports = { updateAdmin, User };

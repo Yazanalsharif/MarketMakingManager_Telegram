@@ -1,5 +1,5 @@
 const chalk = require("chalk");
-const User = require("../models/User");
+const { User } = require("../models/User");
 const { errorHandlerBot } = require("../utils/errorHandler");
 const ErrorResponse = require("../utils/ErrorResponse");
 const isAuthorized = require("../middlewares/authorized");
@@ -171,19 +171,24 @@ const updateUserName = async (ctx) => {
 
 // @Description             sign the user in to the telegram configuration
 // access                   Public
-const signInUser = async () => {
-  try {
-    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.API_KEY_FIREBASE}`;
+const signInUser = async (email, password) => {
+  const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.API_KEY_FIREBASE}`;
 
-    // const user = await auth.getUserByEmail("yazan.s@burency.com");
-    const res = await axios.post(url, {
-      email: "yazan.s2@burency.com",
-      password: "Yazan2000$$12!",
-      returnSecureToken: true,
-    });
-  } catch (err) {
-    console.log(err.events);
-  }
+  const res = await axios.post(url, {
+    email: email,
+    password: password,
+    returnSecureToken: true,
+  });
+  console.log("Here");
+
+  return res.data;
 };
 
-module.exports = { addUser, deleteUser, getUsers, addChatId, updateUserName };
+module.exports = {
+  addUser,
+  deleteUser,
+  getUsers,
+  addChatId,
+  updateUserName,
+  signInUser,
+};

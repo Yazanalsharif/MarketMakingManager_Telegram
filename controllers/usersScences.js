@@ -1,5 +1,11 @@
 const { Scenes } = require("telegraf");
 const ErrorResponse = require("../utils/ErrorResponse");
+const { firebase } = require("../config/db");
+const { signInUser } = require("./users");
+const { updateAdmin } = require("../models/User");
+const { isAuthorized } = require("../middlewares/authorized");
+
+const auth = firebase.auth();
 
 const Wizard = Scenes.WizardScene;
 
@@ -9,8 +15,6 @@ const signin = new Scenes.WizardScene(
   "signin",
   async (ctx) => {
     try {
-      ctx.reply("This feature doesn't available currently");
-      return ctx.scene.leave();
       // Ask for the email Address
       ctx.reply(`Please Enter your email address to sign in`, {
         reply_markup: {
@@ -23,13 +27,17 @@ const signin = new Scenes.WizardScene(
       // next middleware
       return ctx.wizard.next();
     } catch (err) {
-      console.log("Error Here");
-      console.log(err.message);
+      console.log(err);
+      ctx.reply(err.message, {
+        reply_markup: {
+          inline_keyboard: [[{ text: "Cancel", callback_data: "No" }]],
+        },
+      });
     }
   },
   async (ctx) => {
     try {
-      let amount, query;
+      let query;
 
       // check if the ctx came from the inline keyboard
       query = ctx.update.callback_query?.data;
@@ -40,26 +48,20 @@ const signin = new Scenes.WizardScene(
         return ctx.scene.leave();
       }
 
-      // check if the below data is an email address
+      // check if the email Exist
+      const isExist = await auth.getUserByEmail(ctx.update.message?.text);
 
-      if (isNaN(amount) || amount < 0) {
-        // check if the number is valid
-        ctx.reply(`Please Enter the valid amount`, {
-          reply_markup: {
-            inline_keyboard: [[{ text: "Cancel", callback_data: "No" }]],
-          },
-        });
-
-        return;
+      if (!isExist) {
+        throw new ErrorResponse(
+          "The Email doesn't exist Please try with another email"
+        );
       }
 
-      // ask for confirmation
-      ctx.reply(`Please confirm the new limit amount is ${amount}`, {
+      ctx.wizard.state.data.email = ctx.update.message?.text;
+
+      ctx.reply(`Please Enter your password`, {
         reply_markup: {
-          inline_keyboard: [
-            [{ text: "Yes", callback_data: "Yes" }],
-            [{ text: "No", callback_data: "No" }],
-          ],
+          inline_keyboard: [[{ text: "Cancel", callback_data: "No" }]],
         },
       });
 
@@ -67,15 +69,15 @@ const signin = new Scenes.WizardScene(
       return ctx.wizard.next();
     } catch (err) {
       console.log(err);
+      ctx.reply(`${err.message}, Please use another Email`, {
+        reply_markup: {
+          inline_keyboard: [[{ text: "Cancel", callback_data: "No" }]],
+        },
+      });
     }
   },
   async (ctx) => {
     try {
-      console.log(ctx.message?.text);
-      if (ctx.message?.text) {
-        throw new ErrorResponse("Please choose from the menu");
-      }
-
       const query = ctx.update.callback_query?.data;
 
       // if the user didn't confirmed
@@ -83,24 +85,39 @@ const signin = new Scenes.WizardScene(
         ctx.reply("No changes happened, Thanks for interacting with me.");
         return ctx.scene.leave();
       }
+      ctx.wizard.state.data.password = ctx.update.message?.text;
 
-      // Here is the function to store the values in the databases
-      await limitOrder(ctx);
+      console.log(ctx.wizard.state.data);
 
-      // get the limit amount colction
-      const data = await getDocs("limit_order");
-
-      displayData(ctx, data);
-
-      ctx.reply(
-        `The new limit amount is ${ctx.wizard.state.data.amount} has been submitted`
+      const res = await signInUser(
+        ctx.wizard.state.data.email,
+        ctx.wizard.state.data.password
       );
 
-      ctx.scene.leave();
+      // Enter the data to the database
+      const data = {
+        email: ctx.wizard.state.data.email,
+        chat_id: ctx.chat.id,
+        userName: ctx.chat.username,
+        token: res.idToken,
+        refresh_token: res.refreshToken,
+      };
 
+      await updateAdmin(data);
+
+      ctx.reply(`You are sucessfuly signed in`);
+
+      ctx.scene.leave();
       // console.log(ctx.update.callback_query.id);
     } catch (err) {
-      ctx.reply(err.message);
+      // ************************* Attention Herer
+      // we will handle the error that coming from the sign in and the update User
+      ctx.reply(`${err.message}`, {
+        reply_markup: {
+          inline_keyboard: [[{ text: "Cancel", callback_data: "No" }]],
+        },
+      });
+      ctx.scene.leave();
     }
   }
 );

@@ -4,7 +4,7 @@ const server = require("./server");
 const chalk = require("chalk");
 const { connecteDB } = require("./config/db");
 const firebaseConnect = require("./models/botConfig");
-const isAuthorized = require("./middlewares/authorized");
+const { isAuthorized, isUserExist } = require("./middlewares/authorized");
 const {
   addUser,
   deleteUser,
@@ -152,7 +152,10 @@ bot.action("activityReport", async (ctx) => {
   await activityReportList(ctx, bot);
 });
 
-bot.action("createActivitReport", Scenes.Stage.enter("createReportScene"));
+bot.action("createActivitReport", async (ctx) => {
+  await isAuthorized(ctx);
+  Scenes.Stage.enter("createReportScene");
+});
 // add the other scenes related to the activities report
 
 bot.action("statusReport", async (ctx) => {
