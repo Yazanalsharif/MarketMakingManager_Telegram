@@ -11,7 +11,6 @@ const {
   getBalances,
   updateUserAccount,
   updateEngines,
-
   getPairData,
 } = require("../controllers/marketMakerController");
 
@@ -40,46 +39,46 @@ bot.use(async (ctx, next) => {
   }
 });
 
-bot.command("amount_limit", async (ctx) => {
-  try {
-    await updateAmountLimit(ctx);
-  } catch (err) {
-    console.log(err);
-  }
-});
+// bot.command("amount_limit", async (ctx) => {
+//   try {
+//     await updateAmountLimit(ctx);
+//   } catch (err) {
+//     console.log(err);
+//   }
+// });
 
-bot.command("transaction_rate_limit", async (ctx) => {
-  try {
-    await updateTransactionRateLimit(ctx);
-  } catch (err) {
-    console.log(err);
-  }
-});
+// bot.command("transaction_rate_limit", async (ctx) => {
+//   try {
+//     await updateTransactionRateLimit(ctx);
+//   } catch (err) {
+//     console.log(err);
+//   }
+// });
 
-bot.command("Getbalances", async (ctx) => {
-  try {
-    await getBalances(ctx);
-  } catch (err) {
-    console.log(err);
-  }
-});
+// bot.command("Getbalances", async (ctx) => {
+//   try {
+//     await getBalances(ctx);
+//   } catch (err) {
+//     console.log(err);
+//   }
+// });
 
-bot.command("users", async (ctx) => {
-  try {
-    await updateUserAccount(ctx);
-  } catch (err) {
-    console.log(err);
-  }
-});
+// bot.command("users", async (ctx) => {
+//   try {
+//     await updateUserAccount(ctx);
+//   } catch (err) {
+//     console.log(err);
+//   }
+// });
 
-bot.command("engines", async (ctx) => {
-  try {
-    console.log(url);
-    await updateEngines(ctx);
-  } catch (err) {
-    console.log(err);
-  }
-});
+// bot.command("engines", async (ctx) => {
+//   try {
+//     console.log(url);
+//     await updateEngines(ctx);
+//   } catch (err) {
+//     console.log(err);
+//   }
+// });
 
 // ********************************* The inline Keyboards Actions *************************************
 bot.action("backMain", async (ctx) => {

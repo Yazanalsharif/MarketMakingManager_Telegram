@@ -11,25 +11,25 @@ const {
   updateUserName,
 } = require("../controllers/userController");
 
-// addUser command for adding the telegram userName
-bot.command("addUser", async (ctx) => {
-  // the add user function to add the new Manager to the bot database
-  await addUser(ctx, bot);
-});
+// // addUser command for adding the telegram userName
+// bot.command("addUser", async (ctx) => {
+//   // the add user function to add the new Manager to the bot database
+//   await addUser(ctx, bot);
+// });
 
-// Delete the users from the database
-bot.command("deleteUser", async (ctx) => {
-  await deleteUser(ctx);
-});
+// // Delete the users from the database
+// bot.command("deleteUser", async (ctx) => {
+//   await deleteUser(ctx);
+// });
 
-// Get the users with their
-bot.command("getUsers", async (ctx) => {
-  await getUsers(ctx);
-});
-// update the userName of the telegram account
-bot.command("updateUser", async (ctx) => {
-  await updateUserName(ctx);
-});
+// // Get the users with their
+// bot.command("getUsers", async (ctx) => {
+//   await getUsers(ctx);
+// });
+// // update the userName of the telegram account
+// bot.command("updateUser", async (ctx) => {
+//   await updateUserName(ctx);
+// });
 
 bot.command("signin", async (ctx) => {
   try {
@@ -58,9 +58,13 @@ bot.action("sign-in", async (ctx) => {
 
 // help Function
 bot.action("signInHelp", async (ctx) => {
-  ctx.reply("Help signin List here", {
-    reply_markup: {
-      inline_keyboard: [[{ text: "Back", callback_data: "main" }]],
-    },
-  });
+  try {
+    ctx.reply("Help signin List here", {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Back", callback_data: "main" }]],
+      },
+    });
+  } catch (err) {
+    console.log(err);
+  }
 });
