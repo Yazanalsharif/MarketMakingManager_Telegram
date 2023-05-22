@@ -1,11 +1,9 @@
-const User = require("../models/User");
+const { User, getUserByUserName } = require("../models/User");
 const express = require("express");
 const ErrorResponse = require("../utils/ErrorResponse");
 const { Telegraf } = require("telegraf");
 const asyncHandler = require("../middlewares/asyncHandler");
 const multer = require("multer");
-const { sendMail } = require("../utils/sendEmail");
-const { db } = require("../config/db");
 
 const router = express.Router();
 
@@ -32,20 +30,30 @@ router.post(
   asyncHandler(async (req, res, next) => {
     const message = req.query.text;
     const type = req.query.type;
+    let user;
 
-    const user = await User.findOne({ userName: req.params.userName });
+    const userSnapshot = await getUserByUserName(req.params.userName);
 
-    if (!user || !user.chat_id) {
+    console.log(`HERE IS THE ERROR`);
+    userSnapshot.forEach((doc) => {
+      return (user = doc.data());
+    });
+
+    if (!user.chat_id) {
       return next(
         new ErrorResponse(
-          `The User Doesn't completed his registering, Please make sure The userName and the chatId is exist`,
+          "The user doesn't has a chat_id, Please let the user sign in to the telegram bot.",
           400
         )
       );
     }
 
+    console.log(user.chat_id);
+
     if (!req.file) {
-      return next(new ErrorResponse("Please Enter the file throgh form-data"));
+      return next(
+        new ErrorResponse("Please Enter the file throgh form-data", 400)
+      );
     }
 
     if (message) {
@@ -62,7 +70,11 @@ router.post(
 
     res.status(200).json({
       success: true,
-      users: user,
+      user: {
+        email: user.email,
+        chat_id: user.chat_id,
+        telegram_user: user.telegram_user,
+      },
       message,
     });
   })

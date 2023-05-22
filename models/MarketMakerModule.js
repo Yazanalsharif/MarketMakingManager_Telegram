@@ -1,15 +1,7 @@
-const firebase = require("firebase-admin");
-const serviceAccount = require("../config/test-app-config.json");
-const { fireStoreConnect } = require("../config/db");
 const ErrorResponse = require("../utils/ErrorResponse");
 const { db } = require("../config/db");
-// firebase.initializeApp({
-//   credential: firebase.credential.cert(serviceAccount),
-// });
 
-// const db = firebase.firestore();
-
-// db.settings({ ignoreUndefinedProperties: true });
+const getPairs = async (adminId) => {};
 
 // This function will handle the both collections => amount_limit, transaction_rate_limit
 const limitConfig = async (data) => {
@@ -139,10 +131,131 @@ const updateLimitOrder = async (data) => {
   return res;
 };
 
+// ************************************************ Report Functions **************************************
+
+// const createReport = async (data, adminId, pairId) => {
+//   const reportsCollection = db
+//     .collection("Admin")
+//     .doc(adminId)
+//     .collection("Paris")
+//     .doc(pairId)
+//     .collection("report_config");
+
+//   const query = await reportsCollection
+//     .where("reportDest", "==", data.reportDest)
+//     .where("time", "==", data.time)
+//     .where("period", "==", data.period)
+//     .get();
+
+//   if (!query.empty) {
+//     throw new ErrorResponse(
+//       "The report config has the same config, Please Enter another time",
+//       1
+//     );
+//   }
+
+//   const res = await reportsCollection.add({
+//     reportDest: data.reportDest,
+//     period: data.period,
+//     reportType: data.reportType,
+//     time: data.time,
+//   });
+// };
+
+// get the report throgh telegram user
+const getReport = async (telegramUser) => {
+  const reportsCollection = db.collection("Report");
+  let reports = [];
+
+  const reportSnapShot = await reportsCollection
+    .where("destUser", "==", telegramUser)
+    .get();
+
+  if (reportSnapShot.empty) {
+    console.log("The data doesn't Exist");
+  }
+
+  reportSnapShot.forEach((doc) => {
+    reports.push(doc.data());
+  });
+
+  return reports;
+};
+
+const getAdminsData = async (colc, adminId) => {
+  const collection = db.collection(colc);
+  let adminsData = [];
+  const snapShot = await collection.where("admin_id", "==", adminId).get();
+
+  if (snapShot.empty) {
+    throw new Error("There are no data configuration belong to this user");
+  }
+
+  snapShot.forEach((doc) => {
+    adminsData.push({ id: doc.id, data: doc.data() });
+  });
+
+  return adminsData;
+};
+
+// ************************************************ Status Report Functions **************************************
+
+// this function will return the docs in a specific collection
+const getDoc = async (docId) => {
+  console.log(docId);
+
+  const balanceDocs = db.collection("status").doc(docId);
+  const snapShot = await balanceDocs.get();
+
+  // this data will include the whole docs arrays
+  let data = snapShot.data();
+
+  if (!data) {
+    throw new ErrorResponse("Please doc is not exist Please try again");
+  }
+
+  // console.log(snapShot);
+
+  return data;
+};
+
+// const getAdminStatuses = async (adminId) => {
+//   const reportsCollection = db.collection("Report");
+//   let adminReports = [];
+//   const reportSnapShot = await reportsCollection
+//     .where("admin_id", "==", adminId)
+//     .get();
+
+//   if (reportSnapShot.empty) {
+//     throw new Error("there are no reports configuration stored in this user");
+//   }
+
+//   reportSnapShot.forEach((doc) => {
+//     adminReports.push({ id: doc.id, data: doc.data() });
+//   });
+
+//   return adminReports;
+// };
+const updateStatus = async (data) => {
+  const balanceDocs = await db.collection("status").doc(data.id);
+  console.log(balanceDocs);
+  console.log(data.id);
+
+  const res = await balanceDocs.update({
+    status: data.status,
+    reason: data.reason,
+  });
+
+  return data;
+};
+
 module.exports = {
   limitConfig,
   getDocs,
   userBotConfigModule,
   updateEngine,
   updateLimitOrder,
+  getDoc,
+  updateStatus,
+  getAdminsData,
 };

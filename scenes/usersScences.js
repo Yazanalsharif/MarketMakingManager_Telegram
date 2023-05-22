@@ -1,9 +1,11 @@
 const { Scenes } = require("telegraf");
 const ErrorResponse = require("../utils/ErrorResponse");
 const { firebase } = require("../config/db");
-const { signInUser } = require("./users");
+const { signInUser } = require("../controllers/userController");
 const { updateAdmin } = require("../models/User");
-const { isAuthorized } = require("../middlewares/authorized");
+const deleteMessage = require("../utils/deleteMessage");
+const { signInView, mainMenu } = require("../view/main");
+const bot = require("../bot");
 
 const auth = firebase.auth();
 
@@ -21,18 +23,20 @@ const signin = new Scenes.WizardScene(
           inline_keyboard: [[{ text: "Cancel", callback_data: "No" }]],
         },
       });
+
       // to store the data and pass it throgh middle ware
       ctx.wizard.state.data = {};
-
+      ctx.wizard.state.delete = ctx.update.callback_query.message.message_id;
       // next middleware
       return ctx.wizard.next();
     } catch (err) {
-      console.log(err);
-      ctx.reply(err.message, {
-        reply_markup: {
-          inline_keyboard: [[{ text: "Cancel", callback_data: "No" }]],
-        },
-      });
+      await setTimeout(() => {
+        let id = ctx.update.callback_query.message.message_id + 1;
+        deleteMessage(ctx, bot, id);
+      }, 1000);
+
+      await signInView(ctx, bot);
+      return ctx.scene.leave();
     }
   },
   async (ctx) => {
@@ -44,7 +48,7 @@ const signin = new Scenes.WizardScene(
 
       // if the user didn't confirmed
       if (query === `No`) {
-        ctx.reply("No changes happened, Thanks for interacting with me.");
+        await signInView(ctx, bot);
         return ctx.scene.leave();
       }
 
@@ -59,21 +63,26 @@ const signin = new Scenes.WizardScene(
 
       ctx.wizard.state.data.email = ctx.update.message?.text;
 
+      await deleteMessage(ctx, bot, ctx.wizard.state.delete + 1);
+
       ctx.reply(`Please Enter your password`, {
         reply_markup: {
           inline_keyboard: [[{ text: "Cancel", callback_data: "No" }]],
         },
       });
 
+      ctx.wizard.state.delete = ctx.update.message.message_id;
+
       // pass to the next middle ware
       return ctx.wizard.next();
     } catch (err) {
       console.log(err);
-      ctx.reply(`${err.message}, Please use another Email`, {
-        reply_markup: {
-          inline_keyboard: [[{ text: "Cancel", callback_data: "No" }]],
-        },
-      });
+
+      ctx.reply(err.message);
+      await setTimeout(() => {
+        let id = ctx.update.message.message_id + 1;
+        deleteMessage(ctx, bot, id);
+      }, 1000);
     }
   },
   async (ctx) => {
@@ -82,12 +91,10 @@ const signin = new Scenes.WizardScene(
 
       // if the user didn't confirmed
       if (query === `No`) {
-        ctx.reply("No changes happened, Thanks for interacting with me.");
+        await signInView(ctx, bot);
         return ctx.scene.leave();
       }
       ctx.wizard.state.data.password = ctx.update.message?.text;
-
-      console.log(ctx.wizard.state.data);
 
       const res = await signInUser(
         ctx.wizard.state.data.email,
@@ -105,19 +112,22 @@ const signin = new Scenes.WizardScene(
 
       await updateAdmin(data);
 
-      ctx.reply(`You are sucessfuly signed in`);
+      deleteMessage(ctx, bot, ctx.wizard.state.delete + 1);
 
-      ctx.scene.leave();
+      await mainMenu(ctx, bot);
+
+      return ctx.scene.leave();
       // console.log(ctx.update.callback_query.id);
     } catch (err) {
       // ************************* Attention Herer
       // we will handle the error that coming from the sign in and the update User
-      ctx.reply(`${err.message}`, {
-        reply_markup: {
-          inline_keyboard: [[{ text: "Cancel", callback_data: "No" }]],
-        },
-      });
-      ctx.scene.leave();
+      console.log(err);
+
+      ctx.reply(err.message);
+      await setTimeout(() => {
+        let id = ctx.update.message.message_id + 1;
+        deleteMessage(ctx, bot, id);
+      }, 1000);
     }
   }
 );

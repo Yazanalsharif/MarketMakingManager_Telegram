@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { db } = require("../config/db");
+const ErrorResponse = require("../utils/ErrorResponse");
 
 const UserSchema = new mongoose.Schema({
   userName: {
@@ -24,40 +25,103 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", UserSchema);
 
+const adminsCollection = db.collection("Admin");
 // update the admins and add the sign in proberities
 const updateAdmin = async (data) => {
-  const adminsCollection = db.collection("Admins");
+  try {
+    const adminsSnapShot = await adminsCollection
+      .where("email", "==", data.email)
+      .get();
 
-  const adminsSnapShot = await adminsCollection
-    .where("email", "==", data.email)
-    .get();
+    if (adminsSnapShot.empty) {
+      throw new Error(
+        "The data doesn't Exist in the Admin Collection, Please register using the email address"
+      );
+    }
 
-  if (adminsSnapShot.empty) {
-    throw new Error(
-      "The data doesn't Exist in the Admin Collection, Please register using the email address"
-    );
-  }
+    // the first doc id in the collection
+    let docId;
 
-  // the first doc id in the collection
-  let docId;
+    adminsSnapShot.forEach((doc) => {
+      // store the first doc id in the docId
+      docId = doc.id;
+    });
 
-  adminsSnapShot.forEach((doc) => {
-    // store the first doc id in the docId
-    docId = doc.id;
-  });
+    const res = await adminsCollection.doc(docId).update({
+      chat_id: data.chat_id,
+      telegram_user: data.userName,
+      refresh_token: data.refresh_token,
+      token: data.token,
+    });
 
-  const res = await adminsCollection.doc(docId).update({
-    chat_id: data.chat_id,
-    telegram_user: data.userName,
-    refresh_token: data.refresh_token,
-    token: data.token,
-  });
-
-  if (!res.writeTime) {
-    throw new Error(
-      "Error: Server Error, Please contact the admin for more information."
-    );
+    if (!res.writeTime) {
+      throw new Error(
+        "Error: Server Error, Please contact the admin for more information."
+      );
+    }
+  } catch (err) {
+    console.log(err);
   }
 };
 
-module.exports = { updateAdmin, User };
+const getAdmin = async (ctx) => {
+  try {
+    const chatId =
+      ctx.update.message?.chat.id || ctx.update.callback_query?.message.chat.id;
+
+    let adminId;
+
+    const adminsSnapShot = await adminsCollection
+      .where("chat_id", "==", chatId)
+      .get();
+
+    adminsSnapShot.forEach((doc) => {
+      return (adminId = doc.id);
+    });
+
+    return adminId;
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const signOut = async (ctx) => {
+  try {
+    const chatId =
+      ctx.update.message?.chat.id || ctx.update.callback_query?.message.chat.id;
+
+    let adminId;
+
+    const adminsSnapShot = await adminsCollection
+      .where("chat_id", "==", chatId)
+      .get();
+
+    adminsSnapShot.forEach(async (doc) => {
+      await adminsCollection.doc(doc.id).update({
+        chat_id: 0,
+        telegram_user: "",
+      });
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const getUserByUserName = async (userName) => {
+  try {
+    const adminsSnapshot = await adminsCollection
+      .where("telegram_user", "==", userName)
+      .get();
+
+    if (adminsSnapshot.empty) {
+      throw new ErrorResponse(
+        "The userName doesn't exist, Please make sure you are registered in the app and signed in"
+      );
+    }
+
+    return adminsSnapshot;
+  } finally {
+  }
+};
+
+module.exports = { getAdmin, updateAdmin, User, getUserByUserName, signOut };

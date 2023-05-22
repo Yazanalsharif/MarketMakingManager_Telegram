@@ -25,7 +25,7 @@ const isAuthorized = async (ctx) => {
   const chatId = ctx.chat.id;
 
   const snapShot = await db
-    .collection("Admins")
+    .collection("Admin")
     .where("chat_id", "==", chatId)
     .get();
 
@@ -35,4 +35,20 @@ const isAuthorized = async (ctx) => {
   }
 };
 
-module.exports = { isUserExist, isAuthorized };
+const isNotAuthorized = async (ctx) => {
+  const chatId = ctx.chat.id;
+
+  const snapShot = await db
+    .collection("Admin")
+    .where("chat_id", "==", chatId)
+    .get();
+
+  // check if there are a user has the same chat id
+  if (snapShot.docs.length !== 0) {
+    throw new ErrorResponse(
+      `You already signed in, Please go to the menu option by /menu`
+    );
+  }
+};
+
+module.exports = { isNotAuthorized, isAuthorized };

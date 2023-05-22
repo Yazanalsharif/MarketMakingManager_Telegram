@@ -2,9 +2,7 @@ const chalk = require("chalk");
 const { errorHandlerBot } = require("../utils/errorHandler");
 const ErrorResponse = require("../utils/ErrorResponse");
 const isAuthorized = require("../middlewares/authorized");
-
-const { Telegraf, Scenes } = require("telegraf");
-const Wizard = Scenes.WizardScene;
+const { getAdmin } = require("../models/User");
 
 const {
   limitConfig,
@@ -12,9 +10,14 @@ const {
   userBotConfigModule,
   updateEngine,
   updateLimitOrder,
-} = require("../models/botConfig");
+  getAdminsData,
+} = require("../models/MarketMakerModule");
 
-const { checkNumber, checkWord } = require("../utils/helper");
+const { getStatusesData } = require("../models/Status");
+
+const { getReportConfigData } = require("../models/Report");
+
+const { getPairs } = require("../models/Pairs");
 
 // @Description             Change the amount_limit in the botConfig
 // access                   Admin
@@ -268,6 +271,87 @@ const limitOrder = async (ctx) => {
   }
 };
 
+const getActivityReports = async (ctx) => {
+  try {
+    const admin = await getAdmin(ctx);
+
+    const reports = await getAdminsData("Report", admin.id);
+    console.log(reports);
+    let msg = `The Report configuration belong to the user:`;
+    // create a message
+    for (let i = 0; i < reports.length; i++) {
+      msg += `\n\nDocId: ${reports[i].id}\nuser_address: ${reports[i].data.user_address}\nreport_type: ${reports[i].data.report_type}\ntime: ${reports[i].data.time}\ndestination: ${reports[i].data.dest}`;
+    }
+
+    return ctx.reply(msg, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Back", callback_data: "activityReport" }]],
+      },
+    });
+    // const reports = await getR;
+  } catch (err) {
+    ctx.reply(err.message, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Back", callback_data: "activityReport" }]],
+      },
+    });
+  }
+};
+
+const getPairData = async (ctx) => {
+  try {
+    // get the admin Id
+    const adminId = await getAdmin(ctx);
+
+    // Get the whole pairs
+    const pairs = await getPairs(adminId);
+
+    let msg = `The Pairs informations below`;
+
+    for (let i = 0; i < pairs.length; i++) {
+      pairs[i].reportConfiges = await getReportConfigData(adminId, pairs[0].id);
+      pairs[i].statuses = await getStatusesData(adminId, pairs[i].id);
+
+      msg += `\n\n\nThe Pair Id: ${pairs[i].id}\nThe Name ${pairs[i].data.pair}\nThe Engine ${pairs[i].data.engine}\nThe Base ${pairs[i].data.base}\nThe Limit ${pairs[i].data.limit}\nThe Precent ${pairs[i].data.precent}%`;
+
+      for (let x = 0; x < pairs[i].reportConfiges.length; x++) {
+        msg += `\n\nPairs Report Config id: ${pairs[i].reportConfiges[x].id}\nThe Type: ${pairs[i].reportConfiges[x].data.reportType}\nThe Dist: ${pairs[i].reportConfiges[x].data.reportDest}\nThe Time: ${pairs[i].reportConfiges[x].data.time}`;
+      }
+
+      for (let x = 0; x < pairs[i].statuses.length; x++) {
+        msg += `\n\nPairs Status id: ${pairs[i].statuses[x].id}\nThe Engine: ${pairs[i].statuses[x].data.engine}\nThe Pair: ${pairs[i].statuses[x].data.pair}\nThe Status: ${pairs[i].statuses[x].data.status}\nThe Reason: ${pairs[i].statuses[x].data.reason}`;
+      }
+    }
+
+    ctx.reply(msg, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Back", callback_data: "pairList" }]],
+      },
+    });
+
+    // console.log(pairs);
+    // pairs.foreEach(async (pair) => {
+    //   reportSnapshot = await getReportConfig(adminId, pair.id);
+    //   statusSnapshot = await getStatuses(adminId, pair.id);
+    //   pair.reportData.push({
+    //     id: reportSnapshot.id,
+    //     data: reportSnapshot.data(),
+    //   });
+
+    //   pair.statusData.push({
+    //     id: statusSnapshot.id,
+    //     data: statusSnapshot.data(),
+    //   });
+    // });
+  } catch (err) {
+    ctx.reply(err.message, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Back", callback_data: "pairList" }]],
+      },
+    });
+  }
+};
+
 module.exports = {
   updateAmountLimit,
   updateTransactionRateLimit,
@@ -275,4 +359,6 @@ module.exports = {
   updateUserAccount,
   updateEngines,
   limitOrder,
+  getActivityReports,
+  getPairData,
 };

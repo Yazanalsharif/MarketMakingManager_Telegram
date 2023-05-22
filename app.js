@@ -1,53 +1,71 @@
 require("dotenv").config({ path: "./config/.env" });
-const { Telegraf, Scenes, session } = require("telegraf");
+const { Scenes, session } = require("telegraf");
+const bot = require("./bot");
 const server = require("./server");
 const chalk = require("chalk");
 const { connecteDB } = require("./config/db");
-const firebaseConnect = require("./models/botConfig");
-const { isAuthorized, isUserExist } = require("./middlewares/authorized");
-const {
-  addUser,
-  deleteUser,
-  addChatId,
-  getUsers,
-  updateUserName,
-} = require("./controllers/users");
 
-const {
-  updateAmountLimit,
-  updateTransactionRateLimit,
-  getBalances,
-  updateUserAccount,
-  updateEngines,
-  limitOrder,
-} = require("./controllers/botConfig");
-const {
-  limitOrderList,
-  configBotList,
-  activityReportList,
-  statusReportList,
-} = require("./view/botConfig");
+const { isAuthorized, isNotAuthorized } = require("./middlewares/authorized");
+const { mainMenu, signInView } = require("./view/main");
+
+// const {
+//   addUser,
+//   deleteUser,
+//   addChatId,
+//   getUsers,
+//   updateUserName,
+// } = require("./controllers/users");
+
+// const {
+//   updateAmountLimit,
+//   updateTransactionRateLimit,
+//   getBalances,
+//   updateUserAccount,
+//   updateEngines,
+//   limitOrder,
+// } = require("./controllers/botConfig");
+// const {
+//   limitOrderList,
+//   configBotList,
+//   activityReportList,
+//   statusReportList,
+// } = require("./view/marketMaker");
 
 const {
   amountOrderScene,
   precentOrderScene,
-} = require("./controllers/amountLimitScenes");
+} = require("./scenes/amountLimitScenes");
 
-const { createReportScene } = require("./controllers/reportScenes");
+const deleteMessage = require("./utils/deleteMessage");
 
-const { getStatus, updateStatusScene } = require("./controllers/statusScenes");
+const {
+  createReportScene,
+  getReportScene,
+  deleteReportScene,
+} = require("./scenes/reportScenes");
 
-const { main } = require("./view/MainMenu");
+const { updateStatusScene, getStatusScene } = require("./scenes/statusScenes");
 
-const { signin } = require("./controllers/usersScences");
-const { errorHandlerBot } = require("./utils/errorHandler");
+const {
+  getPriceStrategyScene,
+  updateStrategyTypeScene,
+  updateStrategyThresholdScene,
+} = require("./scenes/priceStrategyScenes");
+
+const {
+  orderCancelationScene,
+  orderGapScene,
+} = require("./scenes/pairsScenes");
+
+const { signin } = require("./scenes/usersScences");
+// const { mainMenu } = require("./view/main");
+
+// const { errorHandlerBot } = require("./utils/errorHandler");
 
 server();
 connecteDB();
 
-const bot = new Telegraf(process.env.BOT_KEY);
-
-bot.start(async (ctx) => await addChatId(ctx));
+// const bot = new Telegraf(process.env.BOT_KEY, { polling: true });
 
 const launchBot = async () => {
   try {
@@ -62,113 +80,150 @@ const launchBot = async () => {
   }
 };
 
-const stage = new Scenes.Stage([
+let stage = new Scenes.Stage([
   amountOrderScene,
   precentOrderScene,
   createReportScene,
+  getReportScene,
+  deleteReportScene,
   // here must be the others report scenes
+  getStatusScene,
   updateStatusScene,
+  updateStrategyTypeScene,
+  getPriceStrategyScene,
+  updateStrategyThresholdScene,
+  orderCancelationScene,
+  orderGapScene,
   signin,
 ]);
+
+bot.use(async (ctx, next) => {
+  try {
+    deleteMessage(ctx, bot);
+    next();
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+stage.command("menu", async (ctx) => {
+  try {
+    await isAuthorized(ctx);
+    ctx.scene.leave();
+    await mainMenu(ctx, bot);
+  } catch (err) {
+    ctx.reply(err.message);
+    await setTimeout(() => {
+      let id =
+        ctx.update.message?.message_id ||
+        ctx.update.callback_query?.message.message_id;
+      deleteMessage(ctx, bot, id + 1);
+    }, 1000);
+  }
+});
+
 bot.use(session());
 bot.use(stage.middleware()); // Stage middleware
+
 // ********************************* The users operations commands  *************************************
-// addUser command for adding the telegram userName
-bot.command("addUser", async (ctx) => {
-  // the add user function to add the new Manager to the bot database
-  await addUser(ctx, bot);
-});
+require("./commands/users");
+// // addUser command for adding the telegram userName
+// bot.command("addUser", async (ctx) => {
+//   // the add user function to add the new Manager to the bot database
+//   await addUser(ctx, bot);
+// });
 
-// Delete the users from the database
-bot.command("deleteUser", async (ctx) => {
-  await deleteUser(ctx);
-});
+// // Delete the users from the database
+// bot.command("deleteUser", async (ctx) => {
+//   await deleteUser(ctx);
+// });
 
-// Get the users with their
-bot.command("getUsers", async (ctx) => {
-  await getUsers(ctx);
-});
-// update the userName of the telegram account
-bot.command("updateUser", async (ctx) => {
-  await updateUserName(ctx);
-});
+// // Get the users with their
+// bot.command("getUsers", async (ctx) => {
+//   await getUsers(ctx);
+// });
+// // update the userName of the telegram account
+// bot.command("updateUser", async (ctx) => {
+//   await updateUserName(ctx);
+// });
 
 // ******** The config of the Market Maker
 
-// listen the message events
-bot.command("amount_limit", async (ctx) => {
-  await updateAmountLimit(ctx);
-});
+require("./commands/marketMaker");
 
-bot.command("transaction_rate_limit", async (ctx) => {
-  await updateTransactionRateLimit(ctx);
-});
+// bot.command("amount_limit", async (ctx) => {
+//   await updateAmountLimit(ctx);
+// });
 
-bot.command("Getbalances", async (ctx) => {
-  await getBalances(ctx);
-});
+// bot.command("transaction_rate_limit", async (ctx) => {
+//   await updateTransactionRateLimit(ctx);
+// });
 
-bot.command("users", async (ctx) => {
-  await updateUserAccount(ctx);
-});
+// bot.command("Getbalances", async (ctx) => {
+//   await getBalances(ctx);
+// });
 
-bot.command("engines", async (ctx) => {
-  console.log(url);
-  await updateEngines(ctx);
-});
+// bot.command("users", async (ctx) => {
+//   await updateUserAccount(ctx);
+// });
 
-bot.command("configList", async (ctx) => {
-  try {
-    await isAuthorized(ctx);
-    await configBotList(ctx, bot);
-  } catch (err) {
-    errorHandlerBot(ctx, err);
-  }
-});
+// bot.command("engines", async (ctx) => {
+//   console.log(url);
+//   await updateEngines(ctx);
+// });
 
-bot.command("main", async (ctx) => {
-  await main(ctx, bot);
-});
+// bot.command("configList", async (ctx) => {
+//   try {
+//     await isAuthorized(ctx);
+//     await configBotList(ctx, bot);
+//   } catch (err) {
+//     errorHandlerBot(ctx, err);
+//   }
+// });
 
-// ********************************* The inline Keyboards Actions *************************************
-bot.action("limit", async (ctx) => {
-  await limitOrderList(ctx, bot);
-});
+// bot.command("menu", async (ctx) => {
+//   await mainMenu(ctx, bot);
+// });
 
-bot.action("configlist", async (ctx) => {
-  try {
-    await isAuthorized(ctx);
-    await configBotList(ctx, bot);
-  } catch (err) {
-    errorHandlerBot(ctx, err);
-  }
-});
+// // ********************************* The inline Keyboards Actions *************************************
+// bot.action("limit", async (ctx) => {
+//   await limitOrderList(ctx, bot);
+// });
 
-bot.action("amount", Scenes.Stage.enter("amountOrderScene"));
+// bot.action("configlist", async (ctx) => {
+//   try {
+//     await isAuthorized(ctx);
+//     await configBotList(ctx, bot);
+//   } catch (err) {
+//     errorHandlerBot(ctx, err);
+//   }
+// });
 
-bot.action("precent", Scenes.Stage.enter("precentOrderScene"));
+// bot.action("amount", Scenes.Stage.enter("amountOrderScene"));
 
-bot.action("activityReport", async (ctx) => {
-  await activityReportList(ctx, bot);
-});
+// bot.action("precent", Scenes.Stage.enter("precentOrderScene"));
 
-bot.action("createActivitReport", async (ctx) => {
-  await isAuthorized(ctx);
-  Scenes.Stage.enter("createReportScene");
-});
-// add the other scenes related to the activities report
+// bot.action("activityReport", async (ctx) => {
+//   await activityReportList(ctx, bot);
+// });
 
-bot.action("statusReport", async (ctx) => {
-  await statusReportList(ctx, bot);
-});
+// bot.action("createActivitReport", async (ctx) => {
+//   await isAuthorized(ctx);
+//   Scenes.Stage.enter("createReportScene");
+// });
+// // add the other scenes related to the activities report
 
-bot.action("getStatus", async (ctx) => {
-  await getStatus(ctx);
-});
+// bot.action("statusReport", async (ctx) => {
+//   await statusReportList(ctx, bot);
+// });
 
-bot.action("updateStatus", Scenes.Stage.enter("updateStatusScene"));
+// bot.action("getStatus", async (ctx) => {
+//   await getStatus(ctx);
+// });
 
-bot.action("sign-in", Scenes.Stage.enter("signin"));
+// bot.action("updateStatus", Scenes.Stage.enter("updateStatusScene"));
+
+// bot.action("sign-in", Scenes.Stage.enter("signin"));
 
 // ********************************* Hears function to handle Entering the value  *************************************
 
@@ -179,4 +234,4 @@ bot.catch((err, ctx) => {
 
 launchBot();
 
-module.exports = bot;
+module.exports = { bot };
