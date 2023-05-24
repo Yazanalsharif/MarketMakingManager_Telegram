@@ -7,9 +7,9 @@ const getPairs = async (adminId) => {
     let pairs = [];
 
     const pairSnapshot = await db
-      .collection("Admin")
+      .collection("admins")
       .doc(adminId)
-      .collection("Paris") //change it to pairs
+      .collection("pairs") //change it to pairs
       .get();
 
     if (pairSnapshot.empty) {
@@ -34,9 +34,9 @@ const getPair = async (docId, adminId) => {
     let pair;
 
     const pairSnapshot = db
-      .collection("Admin")
+      .collection("admins")
       .doc(adminId)
-      .collection("Paris")
+      .collection("pairs")
       .doc(docId);
 
     pair = await pairSnapshot.get();
@@ -50,9 +50,9 @@ const getPair = async (docId, adminId) => {
 const updatePair = async (data, adminId, docId) => {
   try {
     const pairSnapshot = db
-      .collection("Admin")
+      .collection("admins")
       .doc(adminId)
-      .collection("Paris")
+      .collection("pairs")
       .doc(docId);
 
     const update = await pairSnapshot.update(data);

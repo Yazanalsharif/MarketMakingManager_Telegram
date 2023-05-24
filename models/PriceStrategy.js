@@ -1,18 +1,15 @@
 const ErrorResponse = require("../utils/ErrorResponse");
 const { db } = require("../config/db");
 
-const adminCollection = db.collection("Admin");
+const adminCollection = db.collection("admins");
 
 // Get the price strategy data and the id from the colleaction
 const getPriceStrategy = async (adminId, pairId) => {
   try {
-    let priceStrategies = [];
-
     const priceStSnapshot = await adminCollection
       .doc(adminId)
-      .collection("Paris")
+      .collection("pairs")
       .doc(pairId)
-      .collection("priceStrategy")
       .get();
 
     if (priceStSnapshot.empty) {
@@ -21,22 +18,26 @@ const getPriceStrategy = async (adminId, pairId) => {
       );
     }
 
-    return priceStSnapshot;
+    let priceStrategy = priceStSnapshot.data().priceStrategy;
+
+    return priceStrategy;
   } finally {
   }
 };
 
 const updatePriceStrategy = async (data, adminId, pairId, priceStrId) => {
   try {
-    const priceStrCollection = adminCollection
+    // Get the pair collection to update it
+    const pairCollection = adminCollection
       .doc(adminId)
-      .collection("Paris")
-      .doc(pairId)
-      .collection("priceStrategy")
-      .doc(priceStrId);
+      .collection("pairs")
+      .doc(pairId);
 
     // update the status with a specific data that came from the user
-    const updatePriceStrategy = await priceStrCollection.update(data);
+    const updatePriceStrategy = await pairCollection.update({
+      // data here is an object
+      priceStrategy: data,
+    });
 
     return updatePriceStrategy;
   } finally {

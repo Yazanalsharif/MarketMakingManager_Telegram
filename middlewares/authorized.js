@@ -25,7 +25,7 @@ const isAuthorized = async (ctx) => {
   const chatId = ctx.chat.id;
 
   const snapShot = await db
-    .collection("Admin")
+    .collection("admins")
     .where("chat_id", "==", chatId)
     .get();
 
@@ -39,7 +39,7 @@ const isNotAuthorized = async (ctx) => {
   const chatId = ctx.chat.id;
 
   const snapShot = await db
-    .collection("Admin")
+    .collection("admins")
     .where("chat_id", "==", chatId)
     .get();
 

@@ -3,10 +3,10 @@ const { Scenes, session } = require("telegraf");
 const bot = require("./bot");
 const server = require("./server");
 const chalk = require("chalk");
-const { connecteDB } = require("./config/db");
 
 const { isAuthorized, isNotAuthorized } = require("./middlewares/authorized");
 const { mainMenu, signInView } = require("./view/main");
+// Yaz54321&&
 
 // const {
 //   addUser,
@@ -63,7 +63,6 @@ const { signin } = require("./scenes/usersScences");
 // const { errorHandlerBot } = require("./utils/errorHandler");
 
 server();
-connecteDB();
 
 // const bot = new Telegraf(process.env.BOT_KEY, { polling: true });
 

@@ -25,7 +25,7 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", UserSchema);
 
-const adminsCollection = db.collection("Admin");
+const adminsCollection = db.collection("admins");
 // update the admins and add the sign in proberities
 const updateAdmin = async (data) => {
   try {

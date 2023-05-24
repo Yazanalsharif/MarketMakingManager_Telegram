@@ -3,16 +3,16 @@ const chalk = require("chalk");
 const firebase = require("firebase-admin");
 const serviceAccount = require("./test-app-config.json");
 
-const connecteDB = async () => {
-  // to avoid a depractionWarning
-  mongoose.set("strictQuery", "false");
-  const connect = await mongoose.connect(`${process.env.MONGO_SERVER_URI}`);
+// const connecteDB = async () => {
+//   // to avoid a depractionWarning
+//   mongoose.set("strictQuery", "false");
+//   const connect = await mongoose.connect(`${process.env.MONGO_SERVER_URI}`);
 
-  //   log the connection with the Database
-  console.log(
-    chalk.green.bold(`the DB connect on the uri ${connect.connection.host}`)
-  );
-};
+//   //   log the connection with the Database
+//   console.log(
+//     chalk.green.bold(`the DB connect on the uri ${connect.connection.host}`)
+//   );
+// };
 
 firebase.initializeApp({
   credential: firebase.credential.cert(serviceAccount),
@@ -21,4 +21,4 @@ firebase.initializeApp({
 const db = firebase.firestore();
 db.settings({ ignoreUndefinedProperties: true });
 
-module.exports = { connecteDB, db, firebase };
+module.exports = { db, firebase };

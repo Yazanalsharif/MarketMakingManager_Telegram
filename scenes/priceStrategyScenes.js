@@ -9,7 +9,10 @@ const {
   getPriceStrategy,
   updatePriceStrategy,
 } = require("../models/PriceStrategy");
-const { changeStratigyList } = require("../view/marketMaker");
+const {
+  changeStratigyList,
+  priceStratigyList,
+} = require("../view/marketMaker");
 
 // ********************************************** updateStrategyThresholdScene **********************
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,20 +111,15 @@ const updateStrategyThresholdScene = new Scenes.WizardScene(
       ctx.wizard.state.pairId = query;
 
       // get the threshold from the collection
-      const priceStrategySnapshot = await getPriceStrategy(
+      const priceStrategyData = await getPriceStrategy(
         ctx.wizard.state.adminId,
         ctx.wizard.state.pairId
       );
 
-      // get the threshold from the collection
-      priceStrategySnapshot.forEach((doc) => {
-        // store the id of the priceStrategy doc to update it directly
-        ctx.wizard.state.priceStrategyId = doc.id;
-        // store the thershold to display it in the confirmation message
-        ctx.wizard.state.data.threshold = doc.data().threshold;
-        // store the type of the price strategy
-        ctx.wizard.state.data.type = doc.data().type;
-      });
+      // store the thershold to display it in the confirmation message
+      ctx.wizard.state.data.threshold = priceStrategyData.threshold;
+      // store the type of the price strategy
+      ctx.wizard.state.data.type = priceStrategyData.type;
 
       const data = ctx.wizard.state.data;
       displayData(ctx, data, `\n\nPlease enter the new threshold`);
@@ -242,7 +240,7 @@ const updateStrategyThresholdScene = new Scenes.WizardScene(
 
       //   update the data in the firestore
       await updatePriceStrategy(
-        { threshold: data.threshold },
+        { type: data.type, threshold: data.threshold },
         ctx.wizard.state.adminId,
         ctx.wizard.state.pairId,
         ctx.wizard.state.priceStrategyId
@@ -398,20 +396,15 @@ const updateStrategyTypeScene = new Scenes.WizardScene(
       ctx.wizard.state.pairId = query;
 
       // get the threshold from the collection
-      const priceStrategySnapshot = await getPriceStrategy(
+      const priceStrategyData = await getPriceStrategy(
         ctx.wizard.state.adminId,
         ctx.wizard.state.pairId
       );
 
-      // get the threshold from the collection
-      priceStrategySnapshot.forEach((doc) => {
-        // store the id of the priceStrategy doc to update it directly
-        ctx.wizard.state.priceStrategyId = doc.id;
-        // store the thershold to display it in the confirmation message
-        ctx.wizard.state.data.threshold = doc.data().threshold;
-        // store the type of the price strategy
-        ctx.wizard.state.data.type = doc.data().type;
-      });
+      // store the thershold to display it in the confirmation message
+      ctx.wizard.state.data.threshold = priceStrategyData.threshold;
+      // store the type of the price strategy
+      ctx.wizard.state.data.type = priceStrategyData.type;
 
       const data = ctx.wizard.state.data;
 
@@ -539,7 +532,7 @@ const updateStrategyTypeScene = new Scenes.WizardScene(
 
       //   update the data in the firestore
       await updatePriceStrategy(
-        { type: data.type },
+        { type: data.type, threshold: data.threshold },
         ctx.wizard.state.adminId,
         ctx.wizard.state.pairId,
         ctx.wizard.state.priceStrategyId
@@ -627,7 +620,7 @@ const getPriceStrategyScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await changeStratigyList(ctx, bot);
+        await priceStratigyList(ctx, bot);
         return ctx.scene.leave();
       }
 
@@ -686,24 +679,20 @@ const getPriceStrategyScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await changeStratigyList(ctx, bot);
+        await priceStratigyList(ctx, bot);
         return ctx.scene.leave();
       }
 
       ctx.wizard.state.pairId = query;
 
-      const priceStrategySnapshot = await getPriceStrategy(
+      const priceStrategy = await getPriceStrategy(
         ctx.wizard.state.adminId,
         ctx.wizard.state.pairId
       );
 
       let msg = `The price strategy for the pair ${ctx.wizard.state.pairId}`;
 
-      priceStrategySnapshot.forEach((doc) => {
-        msg += `\n\nThe price Strategy Id: ${doc.id}\nThe Price strategy: ${
-          doc.data().type
-        }\nThe Threshold: ${doc.data().threshold}`;
-      });
+      msg += `\n\nThe Price strategy: ${priceStrategy.type}\nThe Threshold: ${priceStrategy.threshold}`;
 
       ctx.reply(msg, {
         reply_markup: {
@@ -738,7 +727,7 @@ const getPriceStrategyScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await changeStratigyList(ctx, bot);
+        await priceStratigyList(ctx, bot);
         return ctx.scene.leave();
       }
     } catch (error) {

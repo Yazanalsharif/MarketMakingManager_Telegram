@@ -31,7 +31,7 @@ const {
 //   await updateUserName(ctx);
 // });
 
-bot.command("signin", async (ctx) => {
+bot.start(async (ctx) => {
   try {
     await isNotAuthorized(ctx);
     await signInView(ctx, bot);

@@ -129,48 +129,48 @@ router.post(
 // @Description              End Point for letting the bot sending to the users
 // @Method                   Post /v1/sendMessage
 // @access                   Public
-router.post(
-  "/sendMessage",
-  asyncHandler(async (req, res, next) => {
-    const message = req.body.message;
+// router.post(
+//   "/sendMessage",
+//   asyncHandler(async (req, res, next) => {
+//     const message = req.body.message;
 
-    let sentUsers = [];
-    // Get the users
-    const users = await User.find({});
-    // send a messages for the users
-    users.forEach((user) => {
-      if (user.chat_id) {
-        bot.telegram.sendMessage(user.chat_id, message);
-        sentUsers.push(user.userName);
-      }
-    });
+//     let sentUsers = [];
+//     // Get the users
+//     const users = await User.find({});
+//     // send a messages for the users
+//     users.forEach((user) => {
+//       if (user.chat_id) {
+//         bot.telegram.sendMessage(user.chat_id, message);
+//         sentUsers.push(user.userName);
+//       }
+//     });
 
-    res.json({
-      success: true,
-      users: sentUsers,
-      message,
-    });
-  })
-);
+//     res.json({
+//       success: true,
+//       users: sentUsers,
+//       message,
+//     });
+//   })
+// );
 
 // @Description              Get the active users from the telegram.
 // @Method                   GET /v1/users
 // @access                   Public
-router.get(
-  "/users",
-  asyncHandler(async (req, res, next) => {
-    const users = await User.find({});
-    const actives = [];
-    users.forEach((user) => {
-      if (user.chat_id) {
-        actives.push(user.userName);
-      }
-    });
-    res.status(200).json({
-      success: true,
-      users: actives,
-    });
-  })
-);
+// router.get(
+//   "/users",
+//   asyncHandler(async (req, res, next) => {
+//     const users = await User.find({});
+//     const actives = [];
+//     users.forEach((user) => {
+//       if (user.chat_id) {
+//         actives.push(user.userName);
+//       }
+//     });
+//     res.status(200).json({
+//       success: true,
+//       users: actives,
+//     });
+//   })
+// );
 
 module.exports = router;

@@ -5,12 +5,12 @@ const { db } = require("../config/db");
 const createReport = async (data, adminId, pairId) => {
   try {
     const pairCollection = db
-      .collection("Admin")
+      .collection("admins")
       .doc(adminId)
-      .collection("Paris")
+      .collection("pairs")
       .doc(pairId);
 
-    const reportsCollection = pairCollection.collection("report_config");
+    const reportsCollection = pairCollection.collection("reports");
 
     const pairQuery = await pairCollection.get();
 
@@ -35,7 +35,7 @@ const createReport = async (data, adminId, pairId) => {
       );
     }
 
-    const res = await reportsCollection.add({
+    await reportsCollection.add({
       pair: pairQuery.data().pair,
       engine: pairQuery.data().engine,
       reportDest: data.reportDest,
@@ -50,12 +50,12 @@ const createReport = async (data, adminId, pairId) => {
 const getReportConfig = async (adminId, pairId) => {
   try {
     const pairCollection = db
-      .collection("Admin")
+      .collection("admins")
       .doc(adminId)
-      .collection("Paris")
+      .collection("pairs")
       .doc(pairId);
 
-    const reportsCollection = pairCollection.collection("report_config");
+    const reportsCollection = pairCollection.collection("reports");
 
     const snapShotReports = await reportsCollection.get();
 
@@ -76,11 +76,11 @@ const getReportConfigData = async (adminId, pairId) => {
     let reports = [];
 
     const reportsSnapshot = await db
-      .collection("Admin")
+      .collection("admins")
       .doc(adminId)
       .collection("Paris")
       .doc(pairId)
-      .collection("report_config")
+      .collection("reports")
       .get();
 
     if (reportsSnapshot.empty) {
@@ -101,12 +101,12 @@ const getReportConfigData = async (adminId, pairId) => {
 const getSpecificReport = async (adminId, pairId, reportId) => {
   try {
     const pairCollection = db
-      .collection("Admin")
+      .collection("admins")
       .doc(adminId)
       .collection("Paris")
       .doc(pairId);
 
-    const reportsCollection = pairCollection.collection("report_config");
+    const reportsCollection = pairCollection.collection("reports");
 
     const report = await reportsCollection.doc(reportId).get();
 
@@ -119,12 +119,12 @@ const getSpecificReport = async (adminId, pairId, reportId) => {
 const deleteReportConfig = async (adminId, pairId, reportId) => {
   try {
     const pairCollection = db
-      .collection("Admin")
+      .collection("admins")
       .doc(adminId)
-      .collection("Paris")
+      .collection("pairs")
       .doc(pairId);
 
-    const reportsCollection = pairCollection.collection("report_config");
+    const reportsCollection = pairCollection.collection("reports");
 
     const reportDeleted = reportsCollection.doc(reportId).delete();
 

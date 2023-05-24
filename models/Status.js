@@ -7,9 +7,9 @@ const getStatuses = async (adminId, pairId) => {
     let stauses = [];
 
     const statusSnapshot = await db
-      .collection("Admin")
+      .collection("admins")
       .doc(adminId)
-      .collection("Paris") //change it to pairs
+      .collection("pairs") //change it to pairs
       .doc(pairId)
       .collection("Status")
       .get();
@@ -29,9 +29,9 @@ const getStatusesData = async (adminId, pairId) => {
     let statuses = [];
 
     const statusSnapshot = await db
-      .collection("Admin")
+      .collection("admins")
       .doc(adminId)
-      .collection("Paris")
+      .collection("pairs")
       .doc(pairId)
       .collection("Status")
       .get();
@@ -53,9 +53,9 @@ const getStatusesData = async (adminId, pairId) => {
 const updateStatus = async (data, adminId, pairId, statusId) => {
   try {
     const statusCollection = db
-      .collection("Admin")
+      .collection("admins")
       .doc(adminId)
-      .collection("Paris")
+      .collection("pairs")
       .doc(pairId)
       .collection("Status")
       .doc(statusId);
