@@ -1,6 +1,6 @@
 // PAIRS
-const pairListTitle = 'Please choose from the operations below'
-const pairListInlineKeyboard = [
+const pairsListTitle = 'Please choose from the operations below'
+const pairsListInlineKeyboard = [
   [{ text: "Add New Pair", callback_data: "addNewPair" }],
   [{ text: "Get", callback_data: "getPairs" }],
   [{ text: "Help", callback_data: "helpPairs" }],
@@ -133,9 +133,9 @@ const statusReportList = async (ctx, bot) => {
 
 const pairsList = async (ctx, bot) => {
   try {
-    ctx.editMessageText(pairListTitle,{
+    ctx.editMessageText(pairsListTitle,{
       reply_markup: {
-        inline_keyboard: pairListInlineKeyboard,
+        inline_keyboard: pairsListInlineKeyboard,
       },
     });
 

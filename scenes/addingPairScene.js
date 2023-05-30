@@ -1,5 +1,6 @@
 const {MODELS} = require('../models/models')
 const {ENGINES} = require('../models/engines')
+const {pairsList} = require("../view/marketMaker");
 
 const { Scenes,Markup } = require("telegraf");
 const ErrorResponse = require("../utils/ErrorResponse");
@@ -11,96 +12,118 @@ const { addNewPair } = require("../models/Pairs");
 const { mainMenu } = require("../view/main");
 let addingPairScene
 
-function engineStep() {
+function engineStep(back = 'back') {
     let step = async (ctx) => {
         try {
-            console.log("start")
+            console.log('coming to engine')
             let query;
             let shouldEdit = true;
-            let title = ctx.wizard.state.title
+            let title = ''
             if (ctx.message){
-                if (ctx.message.text) {
+                if (ctx.message.text && !ctx.wizard.state.firstEntry) {
                     let id = ctx.update.message.message_id;
                     console.log('id',id)
                     await deleteMessage(ctx, bot, id);
                     ctx.wizard.state.message = MODELS.errors.textInsteadOfInline.text
+
+                }else if(ctx.wizard.state.helpMode){
+                    let id = ctx.update.message.message_id;
+                    await deleteMessage(ctx, bot, id);
                 }
             }
-            const newTitle = ctx.wizard.state.message === undefined?MODELS.pairs.engine.title:ctx.wizard.state.message+MODELS.pairs.engine.title
-            if (newTitle !== title){
-                ctx.wizard.state.shouldEdit = true
-                title = newTitle;
-                ctx.wizard.state.title = title
-            }
-            if (ctx.wizard.state.shouldEdit){
-                shouldEdit = true;
-                ctx.wizard.state.shouldEdit = false
-            }else if (ctx.wizard.state.shouldEdit === undefined){
-                ctx.wizard.state.shouldEdit = false
-                shouldEdit = true
-            }else{
-                shouldEdit = false
-            }
-            // console.log(ctx.update.callback_query.message.message_id)
+            ctx.wizard.state.firstEntry = false
+
+
             // check if the ctx came from the inline keyboard
             if (ctx.update.callback_query) {
-                console.log("coming to query")
                 ctx.wizard.state.messageToEdit = ctx.update.callback_query.message.message_id
                 query = ctx.update.callback_query.data;
-                console.log(query);
                 if (checkOptions(MODELS.pairs.engine.options,query))
                 {
                     ctx.wizard.next();
+                    if (ctx.wizard.state.data === undefined)ctx.wizard.state.data={};
                     ctx.wizard.state.data.engine = query
                     resetStage(ctx)
-                    // ctx.wizard.selectStep(ctx.wizard.cursor + 1)
                     return ctx.wizard.steps[ctx.wizard.cursor](ctx)
                 }
+                console.log(query);
             }
 
             if (query === "main") {
                 await mainMenu(ctx, bot);
                 return ctx.scene.leave();
             }
+            if (query === "back_from_engine") {
+                console.log(back)
+                if (back === 'back'){
+                    ctx.wizard.selectStep(ctx.wizard.cursor - 1)
+                    resetStage(ctx)
+                    return ctx.wizard.steps[ctx.wizard.cursor](ctx)
+                }else if(back === 'pairsList'){
+                    console.log('going pairsList')
+                    await pairsList(ctx, bot);
+                    return ctx.scene.leave();
+                }
 
-
-
-            // if (query === "back"){
-            //     console.log("going back")
-            //     return ctx.wizard.back()
-            // }
-
-            let pairsArray = [[]];
-            for (let option of MODELS.pairs.engine.options){
-                pairsArray.push([{ text: option.name, callback_data: option.id }]);
             }
-                pairsArray.push([{ text: "Back To Home", callback_data: "main" }]);
-            if (shouldEdit) {
+            if (query === "back_from_help") {
+                ctx.wizard.state.shouldEdit = true;
+                ctx.wizard.state.helpMode = false
+                ctx.wizard.state.message = undefined
+            }
+            if (query === "help") {
+                ctx.wizard.state.shouldEdit = true;
+                ctx.wizard.state.helpMode = true
+                title = MODELS.pairs.engine.description
+                ctx.wizard.state.message = undefined
+                ctx.wizard.state.title = title
+            }
+            if (ctx.wizard.state.helpMode){
+                title = MODELS.pairs.engine.description
+
+            }else {
+                title = ctx.wizard.state.message === undefined?MODELS.pairs.engine.title:ctx.wizard.state.message+MODELS.pairs.engine.title
+            }
+            if (ctx.wizard.state.title !== title){
+                ctx.wizard.state.shouldEdit = true
+                ctx.wizard.state.title = title
+            }
+            shouldEdit = contentShouldEdit(ctx)
+
+
+            let keyboard_options = [[]];
+            if (ctx.wizard.state.helpMode){
+                keyboard_options.push([{ text: "back", callback_data: "back_from_help" }]);
+
+            }else{
+                for (let option of MODELS.pairs.engine.options){
+                    keyboard_options[0].push({ text: option.name, callback_data: option.id });
+                }
+                keyboard_options.push([{ text: "Help", callback_data: "help" }]);
+                keyboard_options.push([{ text: "Back ", callback_data: "back_from_engine" }]);
+                keyboard_options.push([{ text: "Back To Home", callback_data: "main" }]);
+            }
+
+            if (shouldEdit){
                 await ctx.telegram.editMessageText(ctx.chat.id, ctx.wizard.state.messageToEdit, 0, {
                     text: title,
                     inline_message_id: ctx.wizard.state.messageToEdit,
                     reply_markup: {
-                        inline_keyboard: pairsArray,
+                        inline_keyboard: keyboard_options,
                     },
                 });
             }
-            ctx.wizard.state.message = undefined
-            //  to store the data and pass it throgh middle ware
-             ctx.wizard.state.data = {};
-            const adminId = await getAdmin(ctx);
-            //
-            //  //   store the adminId to the session and pass it to the next middleware
-            ctx.wizard.state.adminId = adminId;
 
-            return //ctx.wizard.cursor//ctx.wizard.steps[ctx.wizard.cursor](ctx)
+            ctx.wizard.state.message = undefined
+            return
         } catch (err) {
             // reply with the error
             console.log(err);
-            // ctx.reply(err.message, {
-            //     reply_markup: {
-            //         inline_keyboard: [[{ text: "Back", callback_data: "main" }]],
-            //     },
-            // });
+            ctx.reply(err.message, {
+                reply_markup: {
+                    inline_keyboard: [[{ text: "Back", callback_data: "main" }]],
+                },
+            });
         }
     }
     return step
@@ -1097,7 +1120,7 @@ function contentShouldEdit(ctx){
 
  addingPairScene = new Scenes.WizardScene(
     "addingPairScene",
-     engineStep(),
+     engineStep('pairsList'),
      baseStep(),
      quoteStep(),
      limitStep(),

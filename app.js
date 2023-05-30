@@ -71,7 +71,7 @@ server();
 
 const launchBot = async () => {
   try {
-    bot.launch();
+    await bot.launch();
     console.log(chalk.white.bgGreenBright.bold(`The bot is launched...`));
   } catch (err) {
     if (err.message) {
