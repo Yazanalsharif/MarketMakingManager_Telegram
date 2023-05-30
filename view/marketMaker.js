@@ -2,7 +2,7 @@
 const pairsListTitle = 'Please choose from the operations below'
 const pairsListInlineKeyboard = [
   [{ text: "Add New Pair", callback_data: "addNewPair" }],
-  [{ text: "Get", callback_data: "getPairs" }],
+  [{ text: "List of Pairs", callback_data: "getPairs" }],
   [{ text: "Help", callback_data: "helpPairs" }],
   [{ text: "Back", callback_data: "backMain" }],
 ]

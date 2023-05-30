@@ -113,6 +113,10 @@ function engineStep(back = 'back') {
                     },
                 });
             }
+            const adminId = await getAdmin(ctx);
+            //
+            //  //   store the adminId to the session and pass it to the next middleware
+            ctx.wizard.state.adminId = adminId;
 
             ctx.wizard.state.message = undefined
             return
@@ -341,7 +345,7 @@ function limitStep() {
                         let id = ctx.update.message.message_id;
                         await deleteMessage(ctx, bot, id);
                         limit = ctx.message.text
-                        ctx.wizard.state.data.limit = limit
+                        ctx.wizard.state.data.limit = parseInt(limit)
                         ctx.wizard.next();
                         resetStage(ctx)
                         return ctx.wizard.steps[ctx.wizard.cursor](ctx)
@@ -447,7 +451,7 @@ function thresholdStep() {
                         let id = ctx.update.message.message_id;
                         await deleteMessage(ctx, bot, id);
                         threshold = ctx.message.text
-                        ctx.wizard.state.data.threshold = threshold
+                        ctx.wizard.state.data.threshold = parseInt(threshold)
                         ctx.wizard.next();
                         resetStage(ctx)
                         return ctx.wizard.steps[ctx.wizard.cursor](ctx)
@@ -659,7 +663,7 @@ function priceStrategyThresholdStep() {
                         let id = ctx.update.message.message_id;
                         await deleteMessage(ctx, bot, id);
                         priceStrategyThreshold = ctx.message.text
-                        ctx.wizard.state.data.priceStrategyThreshold = priceStrategyThreshold
+                        ctx.wizard.state.data.priceStrategyThreshold = parseInt(priceStrategyThreshold)
                         ctx.wizard.next();
                         resetStage(ctx)
                         return ctx.wizard.steps[ctx.wizard.cursor](ctx)
@@ -765,7 +769,7 @@ function orderTimeoutStep() {
                         let id = ctx.update.message.message_id;
                         await deleteMessage(ctx, bot, id);
                         orderTimeout = ctx.message.text
-                        ctx.wizard.state.data.orderTimeout = orderTimeout
+                        ctx.wizard.state.data.orderTimeout = parseInt(orderTimeout)
                         ctx.wizard.next();
                         resetStage(ctx)
                         return ctx.wizard.steps[ctx.wizard.cursor](ctx)
@@ -871,7 +875,7 @@ function buySellDiffStep() {
                         let id = ctx.update.message.message_id;
                         await deleteMessage(ctx, bot, id);
                         buySellDiff = ctx.message.text
-                        ctx.wizard.state.data.buySellDiff = buySellDiff
+                        ctx.wizard.state.data.buySellDiff = parseInt(buySellDiff)
                         ctx.wizard.next();
                         resetStage(ctx)
                         return ctx.wizard.steps[ctx.wizard.cursor](ctx)
