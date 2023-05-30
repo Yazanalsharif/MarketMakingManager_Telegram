@@ -1,4 +1,3 @@
-const { db } = require("../config/db");
 let MODELS = {
     pairs:{
         order:['engine','base','quote','limit'],
@@ -133,34 +132,4 @@ let MODELS = {
     }
 }
 
-
-
-// getModels().then(result =>{MODELS = result})
-
-// Get all models
-async function getModels() {
-    let models = {};
-    console.log('getting models')
-    try {
-        const modelsSnapshot = await db
-            .collection("model")
-            .get();
-
-        if (modelsSnapshot.empty) {
-            throw new ErrorResponse(
-                "There are no model"
-            );
-        }
-
-        modelsSnapshot.forEach((doc) => {
-            models[doc.id] = doc.data();
-        });
-
-        return models;
-    } finally {
-        // console.log(err);
-    }
-};
-
-
-module.exports = { getModels,MODELS};
+module.exports = { MODELS};

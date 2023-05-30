@@ -10,24 +10,6 @@ const { getAdmin } = require("../models/User");
 const { addNewPair } = require("../models/Pairs");
 const { mainMenu } = require("../view/main");
 let addingPairScene
-// createAddingPairScene()
-function createAddingPairScene() {
-    console.log(MODELS)
-    let orderObject = MODELS.pairs.order
-    console.log(orderObject)
-    let i = 0
-    for (let item of orderObject){
-        if (!MODELS.pairs[item].shouldAsk) continue;
-        if (i === 0){
-            addingPairScene = new Scenes.WizardScene("addingPairScene",addingPairSteps(MODELS.pairs[item].title,MODELS.pairs[item],false,true))
-        }else{
-            addingPairScene.steps.push(addingPairSteps(MODELS.pairs[item].title,MODELS.pairs[item],false,true))
-        }
-        i++;
-    }
-    return addingPairScene
-}
-
 
 function engineStep() {
     let step = async (ctx) => {
@@ -1079,155 +1061,6 @@ function confirmationStep() {
     }
     return step
 }
-function creatingOptionStep(title,data,back,home) {
-    let step = async (ctx) => {
-        try {
-            let query;
-            if (await checkWrongInput(ctx)) return;
-
-            // check if the ctx came from the inline keyboard
-            if (ctx.update.callback_query) {
-                query = ctx.update.callback_query.data;
-                console.log(query);
-            }
-
-            if (query === "main") {
-                await mainMenu(ctx, bot);
-                return ctx.scene.leave();
-            }
-            if (query === "back"){
-                console.log("going back")
-                return ctx.wizard.back()
-            }
-
-                let pairsArray = [[]];
-                for (let option of data.options){
-                    pairsArray.push([{ text: option.name, callback_data: option.id }]);
-                }
-                if (back)
-                    pairsArray.push([{ text: "Back", callback_data: "back" }]);
-                if (home)
-                    pairsArray.push([{ text: "Back To Home", callback_data: "main" }]);
-
-                ctx.reply(title, {
-                    reply_markup: {
-                        inline_keyboard: pairsArray,
-                    },
-                });
-
-            //  to store the data and pass it throgh middle ware
-            //  ctx.wizard.state.data = {};
-            // const adminId = await getAdmin(ctx);
-            //
-            //  //   store the adminId to the session and pass it to the next middleware
-            //  ctx.wizard.state.adminId = adminId;
-
-            return ctx.wizard.next();
-        } catch (err) {
-            // reply with the error
-            console.log(err);
-            ctx.reply(err.message, {
-                reply_markup: {
-                    inline_keyboard: [[{ text: "Back", callback_data: "main" }]],
-                },
-            });
-        }
-    }
-    return step
-}
-
-
-
-function addingPairSteps(title,data,back,home) {
-    let step = async (ctx) => {
-        try {
-            let query;
-            // if (await checkWrongInput(ctx) && data.type !== 'string') return;
-
-            // check if the ctx came from the inline keyboard
-            if (ctx.update.callback_query) {
-                query = ctx.update.callback_query.data;
-                console.log(query);
-            }
-
-            if (query === "mainh") {
-                await mainMenu(ctx, bot);
-                return ctx.scene.leave();
-            }
-            if (query === "backh"){
-                console.log("going back")
-                return ctx.wizard.back()
-            }
-
-            if (data.type === 'options'){
-                let pairsArray = [[]];
-                for (let option of data.options){
-                    pairsArray.push([{ text: option.name, callback_data: option.id }]);
-                }
-                if (back)
-                    pairsArray.push([{ text: "Back", callback_data: "backh" }]);
-                if (home)
-                    pairsArray.push([{ text: "Back To Home", callback_data: "mainh" }]);
-                console.log('query',ctx.update.callback_query)
-                console.log('query id',ctx.update.callback_query.id)
-
-                // const newInlineKeyboard = Markup.inlineKeyboard([
-                //     Markup.callbackButton('New Option 1', 'new_option_1'),
-                //     Markup.callbackButton('New Option 2', 'new_option_2')
-                // ]);
-                ctx.editMessageText('Updated message title', pairsArray);
-
-
-                ctx.reply(title, {
-                    reply_markup: {
-                        inline_keyboard: pairsArray,
-                    },
-                });
-            }
-            if (data.type === 'string'){
-                let pairsArray = [[]];
-                if (back)
-                    pairsArray.push([{ text: "Back", callback_data: "backh" }]);
-                if (home)
-                    pairsArray.push([{ text: "Back To Home", callback_data: "mainh" }]);
-                ctx.reply(title, {
-                    reply_markup: {
-                        inline_keyboard: pairsArray,
-                    },
-                });
-            }
-
-
-
-
-            //  to store the data and pass it throgh middle ware
-           //  ctx.wizard.state.data = {};
-           // const adminId = await getAdmin(ctx);
-           //
-           //  //   store the adminId to the session and pass it to the next middleware
-           //  ctx.wizard.state.adminId = adminId;
-
-            return ctx.wizard.next();
-        } catch (err) {
-            // reply with the error
-            console.log(err);
-            ctx.reply(err.message, {
-                reply_markup: {
-                    inline_keyboard: [[{ text: "Back", callback_data: "main" }]],
-                },
-            });
-        }
-    }
-    return step
-
-
-}
-function checkWrongInput(ctx){
-    if (ctx.message?.text) {
-        return true
-    }
-    return false
-}
 
 function checkOptions(options,query){
     for (let option of options){
@@ -1264,7 +1097,6 @@ function contentShouldEdit(ctx){
 
  addingPairScene = new Scenes.WizardScene(
     "addingPairScene",
-    //   first stage
      engineStep(),
      baseStep(),
      quoteStep(),
