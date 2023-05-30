@@ -314,10 +314,11 @@ const getPairData = async (ctx) => {
 
       msg += `\n\n\nThe Pair Id: ${pairs[i].id}\nThe Name ${pairs[i].data.pair}\nThe Engine ${pairs[i].data.engine}\nThe Base ${pairs[i].data.base}\nThe Limit ${pairs[i].data.limit}\nThe Precent ${pairs[i].data.precent}%`;
 
+      if (pairs[i].reportConfiges)
       for (let x = 0; x < pairs[i].reportConfiges.length; x++) {
         msg += `\n\nPairs Report Config id: ${pairs[i].reportConfiges[x].id}\nThe Type: ${pairs[i].reportConfiges[x].data.reportType}\nThe Dist: ${pairs[i].reportConfiges[x].data.reportDest}\nThe Time: ${pairs[i].reportConfiges[x].data.time}`;
       }
-
+      if (pairs[i].statuses)
       for (let x = 0; x < pairs[i].statuses.length; x++) {
         msg += `\n\nPairs Status id: ${pairs[i].statuses[x].id}\nThe Engine: ${pairs[i].statuses[x].data.engine}\nThe Pair: ${pairs[i].statuses[x].data.pair}\nThe Status: ${pairs[i].statuses[x].data.status}\nThe Reason: ${pairs[i].statuses[x].data.reason}`;
       }
