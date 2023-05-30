@@ -162,10 +162,7 @@ const updateStrategyThresholdScene = new Scenes.WizardScene(
       }
 
       // when the user use inline keyboard the text is empty and generate an error
-      if (ctx.message.text) {
-        ctx.wizard.state.data.threshold = ctx.message.text;
-        threshold = ctx.message.text;
-      }
+
       // 100 >= precet >= 0
       if (isNaN(threshold) || threshold >= 100 || threshold <= 0) {
         ctx.reply(`Please Enter the valid amount`);

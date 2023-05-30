@@ -60,5 +60,20 @@ const updatePair = async (data, adminId, docId) => {
     console.log(err);
   }
 };
+const addNewPair = async (data, adminId) => {
+  try {
+    const pairSnapshot = db
+        .collection("admins")
+        .doc(adminId)
+        .collection("pairs")
+        .doc()
 
-module.exports = { getPairs, getPair, updatePair };
+
+    const result = await pairSnapshot.set(data)
+    return result
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+module.exports = { getPairs, getPair, updatePair, addNewPair };

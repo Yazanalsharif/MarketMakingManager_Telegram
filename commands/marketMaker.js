@@ -281,6 +281,14 @@ bot.action("pairList", async (ctx) => {
   }
 });
 
+bot.action("addNewPair", async (ctx) => {
+  try {
+    await ctx.scene.enter("addingPairScene");
+  } catch (err) {
+    console.log(err);
+  }
+});
+
 bot.action("getPairs", async (ctx) => {
   try {
     // the get pairs function

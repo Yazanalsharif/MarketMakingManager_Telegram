@@ -70,26 +70,41 @@ const statusReportList = async (ctx, bot) => {
 
 const pairsList = async (ctx, bot) => {
   try {
-    bot.telegram.sendMessage(
-      ctx.chat.id,
-      `Please choose from the operations below`,
-      {
-        reply_markup: {
-          inline_keyboard: [
-            // [
-            //   { text: "Create", callback_data: "createActivitReport" },
-            //   { text: "Delete", callback_data: "deleteActivityReport" },
-            // ],
-            [
-              { text: "Get", callback_data: "getPairs" },
-              // { text: "Edit", callback_data: "editActivityReport" },
-            ],
-            [{ text: "Help", callback_data: "helpPairs" }],
-            [{ text: "Back", callback_data: "backMain" }],
-          ],
-        },
-      }
-    );
+    ctx.editMessageText('Please choose from the operations below',       {
+      reply_markup: {
+        inline_keyboard: [
+          // [
+          //   { text: "Create", callback_data: "createActivitReport" },
+          //   { text: "Delete", callback_data: "deleteActivityReport" },
+          // ],
+          [{ text: "Add New Pair", callback_data: "addNewPair" }],
+          [{ text: "Get", callback_data: "getPairs" }],
+          [{ text: "Help", callback_data: "helpPairs" }],
+          [{ text: "Back", callback_data: "backMain" }],
+        ],
+      },
+    });
+    // bot.telegram.sendMessage(
+    //   ctx.chat.id,
+    //   `Please choose from the operations below`,
+    //   {
+    //     reply_markup: {
+    //       inline_keyboard: [
+    //         // [
+    //         //   { text: "Create", callback_data: "createActivitReport" },
+    //         //   { text: "Delete", callback_data: "deleteActivityReport" },
+    //         // ],
+    //         [
+    //           { text: "Get", callback_data: "getPairs" },
+    //           // { text: "Edit", callback_data: "editActivityReport" },
+    //         ],
+    //         [{ text: "Add New Pair", callback_data: "addNewPair" }],
+    //         [{ text: "Help", callback_data: "helpPairs" }],
+    //         [{ text: "Back", callback_data: "backMain" }],
+    //       ],
+    //     },
+    //   }
+    // );
   } catch (error) {
     console.log(error);
   }

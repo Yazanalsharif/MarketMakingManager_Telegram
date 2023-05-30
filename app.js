@@ -3,6 +3,8 @@ const { Scenes, session } = require("telegraf");
 const bot = require("./bot");
 const server = require("./server");
 const chalk = require("chalk");
+const {MODELS} = require('./models/models')
+
 
 const { isAuthorized, isNotAuthorized } = require("./middlewares/authorized");
 const { mainMenu, signInView } = require("./view/main");
@@ -45,6 +47,7 @@ const {
 } = require("./scenes/reportScenes");
 
 const { updateStatusScene, getStatusScene } = require("./scenes/statusScenes");
+const { addingPairScene ,createAddingPairScene} = require("./scenes/addingPairScene");
 
 const {
   getPriceStrategyScene,
@@ -94,16 +97,18 @@ let stage = new Scenes.Stage([
   orderCancelationScene,
   orderGapScene,
   signin,
+  addingPairScene
+  // addingPairScene
 ]);
 
-bot.use(async (ctx, next) => {
-  try {
-    deleteMessage(ctx, bot);
-    next();
-  } catch (err) {
-    console.log(err);
-  }
-});
+// bot.use(async (ctx, next) => {
+//   try {
+//     deleteMessage(ctx, bot);
+//     next();
+//   } catch (err) {
+//     console.log(err);
+//   }
+// });
 
 stage.command("menu", async (ctx) => {
   try {
