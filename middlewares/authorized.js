@@ -44,11 +44,8 @@ const isNotAuthorized = async (ctx) => {
     .get();
 
   // check if there are a user has the same chat id
-  if (snapShot.docs.length !== 0) {
-    throw new ErrorResponse(
-      `You already signed in, Please go to the menu option by /menu`
-    );
-  }
+
+  return snapShot.docs.length;
 };
 
 module.exports = { isNotAuthorized, isAuthorized };
