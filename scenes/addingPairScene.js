@@ -23,7 +23,7 @@ function engineStep() {
                     let id = ctx.update.message.message_id;
                     console.log('id',id)
                     await deleteMessage(ctx, bot, id);
-                    ctx.wizard.state.message = 'Please Choose From options Blow\n'
+                    ctx.wizard.state.message = MODELS.errors.textInsteadOfInline.text
                 }
             }
             const newTitle = ctx.wizard.state.message === undefined?MODELS.pairs.engine.title:ctx.wizard.state.message+MODELS.pairs.engine.title
@@ -528,7 +528,7 @@ function priceStrategyTypeStep() {
                     let id = ctx.update.message.message_id;
                     console.log('id',id)
                     await deleteMessage(ctx, bot, id);
-                    ctx.wizard.state.message = 'Please Choose From options Blow\n'
+                    ctx.wizard.state.message = MODELS.errors.textInsteadOfInline.text
 
                 }else if(ctx.wizard.state.helpMode){
                     let id = ctx.update.message.message_id;
@@ -952,7 +952,7 @@ function confirmationStep() {
                     let id = ctx.update.message.message_id;
                     console.log('id',id)
                     await deleteMessage(ctx, bot, id);
-                    ctx.wizard.state.message = 'Please Choose From options Blow\n'
+                    ctx.wizard.state.message = MODELS.errors.textInsteadOfInline.text
 
                 }else if(ctx.wizard.state.helpMode){
                     let id = ctx.update.message.message_id;

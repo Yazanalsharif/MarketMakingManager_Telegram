@@ -1,4 +1,10 @@
 let MODELS = {
+    errors:{
+      textInsteadOfInline:{
+          text:'Please Choose From options Blow\n\n',
+          description:'When user instead of selecting option write smt as text'
+      }
+    },
     pairs:{
         order:['engine','base','quote','limit'],
         base1:{
