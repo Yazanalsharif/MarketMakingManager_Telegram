@@ -1,9 +1,10 @@
 const chalk = require("chalk");
 const { errorHandlerBot } = require("../utils/errorHandler");
 const ErrorResponse = require("../utils/ErrorResponse");
-const isAuthorized = require("../middlewares/authorized");
+const { isAuthorized } = require("../middlewares/authorized");
+const deleteMessage = require("../utils/deleteMessage");
 const { getAdmin } = require("../models/User");
-
+const { mainMenu } = require("../view/main");
 const {
   limitConfig,
   getDocs,
@@ -353,6 +354,22 @@ const getPairData = async (ctx) => {
   }
 };
 
+const menuConfig = async (ctx, bot) => {
+  try {
+    await isAuthorized(ctx);
+    ctx.scene.leave();
+    await mainMenu(ctx, bot);
+  } catch (err) {
+    ctx.reply(err.message);
+    await setTimeout(() => {
+      let id =
+        ctx.update.message?.message_id ||
+        ctx.update.callback_query?.message.message_id;
+      deleteMessage(ctx, bot, id + 1);
+    }, 1000);
+  }
+};
+
 module.exports = {
   updateAmountLimit,
   updateTransactionRateLimit,
@@ -362,4 +379,5 @@ module.exports = {
   limitOrder,
   getActivityReports,
   getPairData,
+  menuConfig,
 };

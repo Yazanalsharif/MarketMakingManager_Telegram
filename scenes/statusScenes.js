@@ -22,7 +22,7 @@ const updateStatusScene = new Scenes.WizardScene(
       let query;
 
       if (ctx.message?.text) {
-        ctx.reply(`Please choose from the above menu`);
+        await ctx.reply(`Please choose from the above menu`);
         await setTimeout(() => {
           let id = ctx.update.message.message_id + 1;
           deleteMessage(ctx, bot, id);
@@ -55,7 +55,7 @@ const updateStatusScene = new Scenes.WizardScene(
 
       pairsArray.push([{ text: "Back", callback_data: "status" }]);
 
-      ctx.reply("Please Enter which pair you want to change", {
+      await ctx.reply("Please Enter which pair you want to change", {
         reply_markup: {
           inline_keyboard: pairsArray,
         },
@@ -70,7 +70,7 @@ const updateStatusScene = new Scenes.WizardScene(
     } catch (err) {
       // reply with the error
       console.log(err);
-      ctx.reply(err.message, {
+      await ctx.reply(err.message, {
         reply_markup: {
           inline_keyboard: [[{ text: "Back", callback_data: "status" }]],
         },
@@ -83,7 +83,7 @@ const updateStatusScene = new Scenes.WizardScene(
     try {
       // Only inlineKeyboard is working others must doesn't works
       if (ctx.message?.text) {
-        ctx.reply(`Please choose from the above menu`);
+        await ctx.reply(`Please choose from the above menu`);
         await setTimeout(() => {
           let id = ctx.update.message.message_id + 1;
           deleteMessage(ctx, bot, id);
@@ -115,7 +115,7 @@ const updateStatusScene = new Scenes.WizardScene(
 
       statusConfigList.push([{ text: "Back", callback_data: "status" }]);
 
-      ctx.reply("Please Enter which status you want to change", {
+      await ctx.reply("Please Enter which status you want to change", {
         reply_markup: {
           inline_keyboard: statusConfigList,
         },
@@ -125,7 +125,7 @@ const updateStatusScene = new Scenes.WizardScene(
     } catch (err) {
       // reply with the error
       console.log(err);
-      ctx.reply(err.message, {
+      await ctx.reply(err.message, {
         reply_markup: {
           inline_keyboard: [[{ text: "Back", callback_data: "status" }]],
         },
@@ -139,7 +139,7 @@ const updateStatusScene = new Scenes.WizardScene(
 
       // Only inlineKeyboard is working others must doesn't works
       if (ctx.message?.text) {
-        ctx.reply(`Please choose from the above menu`);
+        await ctx.reply(`Please choose from the above menu`);
         await setTimeout(() => {
           let id = ctx.update.message.message_id + 1;
           deleteMessage(ctx, bot, id);
@@ -178,7 +178,7 @@ const updateStatusScene = new Scenes.WizardScene(
 
       ctx.wizard.state.statusId = query;
 
-      ctx.reply(`Please Enter The New Status`, {
+      await ctx.reply(`Please Enter The New Status`, {
         reply_markup: {
           inline_keyboard: [
             [{ text: "Working", callback_data: "working" }],
@@ -192,7 +192,7 @@ const updateStatusScene = new Scenes.WizardScene(
     } catch (err) {
       // reply with the error
       console.log(err);
-      ctx.reply(err.message, {
+      await ctx.reply(err.message, {
         reply_markup: {
           inline_keyboard: [[{ text: "Back", callback_data: "status" }]],
         },
@@ -203,7 +203,7 @@ const updateStatusScene = new Scenes.WizardScene(
   async (ctx) => {
     try {
       if (ctx.message?.text) {
-        ctx.reply(`Please choose from the above menu`);
+        await ctx.reply(`Please choose from the above menu`);
         await setTimeout(() => {
           let id = ctx.update.message.message_id + 1;
           deleteMessage(ctx, bot, id);
@@ -217,14 +217,17 @@ const updateStatusScene = new Scenes.WizardScene(
 
       // if the user didn't confirmed
       if (query === `No`) {
-        ctx.reply("No changes happened, Thanks for interacting with me.", {
-          reply_markup: {
-            inline_keyboard: [
-              statuses,
-              [{ text: "Back", callback_data: "status" }],
-            ],
-          },
-        });
+        await ctx.reply(
+          "No changes happened, Thanks for interacting with me.",
+          {
+            reply_markup: {
+              inline_keyboard: [
+                statuses,
+                [{ text: "Back", callback_data: "status" }],
+              ],
+            },
+          }
+        );
         return ctx.wizard.next();
       }
 
@@ -238,7 +241,7 @@ const updateStatusScene = new Scenes.WizardScene(
 
       const data = ctx.wizard.state.data;
 
-      ctx.reply(
+      await ctx.reply(
         `Please confirm the new data:\n\nId: ${ctx.wizard.state.statusId}\nStatus: ${data.status}\nReason: ${data.reason}`,
         {
           reply_markup: {
@@ -254,7 +257,7 @@ const updateStatusScene = new Scenes.WizardScene(
     } catch (err) {
       // reply with the error
       console.log(err);
-      ctx.reply(err.message, {
+      await ctx.reply(err.message, {
         reply_markup: {
           inline_keyboard: [[{ text: "Back", callback_data: "status" }]],
         },
@@ -265,7 +268,7 @@ const updateStatusScene = new Scenes.WizardScene(
   async (ctx) => {
     try {
       if (ctx.message?.text) {
-        ctx.reply(`Please choose from the above menu`);
+        await ctx.reply(`Please choose from the above menu`);
         await setTimeout(() => {
           let id = ctx.update.message.message_id + 1;
           deleteMessage(ctx, bot, id);
@@ -279,11 +282,14 @@ const updateStatusScene = new Scenes.WizardScene(
 
       // if the user didn't confirmed
       if (query === `No`) {
-        ctx.reply("No changes happened, Thanks for interacting with me.", {
-          reply_markup: {
-            inline_keyboard: [[{ text: "Back", callback_data: "status" }]],
-          },
-        });
+        await ctx.reply(
+          "No changes happened, Thanks for interacting with me.",
+          {
+            reply_markup: {
+              inline_keyboard: [[{ text: "Back", callback_data: "status" }]],
+            },
+          }
+        );
         return ctx.wizard.next();
       }
 
@@ -302,7 +308,7 @@ const updateStatusScene = new Scenes.WizardScene(
         ctx.wizard.state.statusId
       );
 
-      ctx.reply(
+      await ctx.reply(
         `The status has been changed\n\nId: ${ctx.wizard.state.statusId}\nStatus: ${data.status}\nReason: ${data.reason}`,
         {
           reply_markup: {
@@ -315,7 +321,7 @@ const updateStatusScene = new Scenes.WizardScene(
     } catch (err) {
       // reply with the error
       console.log(err);
-      ctx.reply(err.message, {
+      await ctx.reply(err.message, {
         reply_markup: {
           inline_keyboard: [[{ text: "Back", callback_data: "status" }]],
         },
@@ -329,7 +335,7 @@ const updateStatusScene = new Scenes.WizardScene(
     try {
       const query = ctx.update.callback_query?.data;
       if (ctx.message?.text) {
-        ctx.reply(`Please choose from the above menu`);
+        await ctx.reply(`Please choose from the above menu`);
         await setTimeout(() => {
           let id = ctx.update.message.message_id + 1;
           deleteMessage(ctx, bot, id);
@@ -346,7 +352,7 @@ const updateStatusScene = new Scenes.WizardScene(
     } catch (error) {
       // reply with the error
       console.log(err);
-      ctx.reply(err.message, {
+      await ctx.reply(err.message, {
         reply_markup: {
           inline_keyboard: [[{ text: "Back", callback_data: "status" }]],
         },
@@ -396,7 +402,7 @@ const getStatusScene = new Scenes.WizardScene(
 
       pairsArray.push([{ text: "Back", callback_data: "status" }]);
 
-      ctx.reply("Select the pair to get the statuses", {
+      await ctx.reply("Select the pair to get the statuses", {
         reply_markup: {
           inline_keyboard: pairsArray,
         },
@@ -410,7 +416,7 @@ const getStatusScene = new Scenes.WizardScene(
       return ctx.wizard.next();
     } catch (err) {
       console.log(err);
-      ctx.reply(err.message, {
+      await ctx.reply(err.message, {
         reply_markup: {
           inline_keyboard: [[{ text: "Back", callback_data: "status" }]],
         },
@@ -423,7 +429,7 @@ const getStatusScene = new Scenes.WizardScene(
     try {
       // Only inlineKeyboard is working others must doesn't works
       if (ctx.message?.text) {
-        ctx.reply(`Please choose from the above menu`);
+        await ctx.reply(`Please choose from the above menu`);
         await setTimeout(() => {
           let id = ctx.update.message.message_id + 1;
           deleteMessage(ctx, bot, id);
@@ -460,7 +466,7 @@ const getStatusScene = new Scenes.WizardScene(
         }\nThe reason: ${doc.data().reason}`;
       });
 
-      ctx.reply(msg, {
+      await ctx.reply(msg, {
         reply_markup: {
           inline_keyboard: [[{ text: "Back", callback_data: "status" }]],
         },
@@ -471,7 +477,7 @@ const getStatusScene = new Scenes.WizardScene(
     } catch (err) {
       // reply with the error
       console.log(err);
-      ctx.reply(err.message, {
+      await ctx.reply(err.message, {
         reply_markup: {
           inline_keyboard: [[{ text: "Back", callback_data: "status" }]],
         },
@@ -482,7 +488,7 @@ const getStatusScene = new Scenes.WizardScene(
     try {
       const query = ctx.update.callback_query?.data;
       if (ctx.message?.text) {
-        ctx.reply(`Please choose from the above menu`);
+        await ctx.reply(`Please choose from the above menu`);
         await setTimeout(() => {
           let id = ctx.update.message.message_id + 1;
           deleteMessage(ctx, bot, id);
@@ -499,7 +505,7 @@ const getStatusScene = new Scenes.WizardScene(
     } catch (error) {
       // reply with the error
       console.log(err);
-      ctx.reply(err.message, {
+      await ctx.reply(err.message, {
         reply_markup: {
           inline_keyboard: [[{ text: "Back", callback_data: "status" }]],
         },

@@ -10,6 +10,7 @@ const {
   getUsers,
   updateUserName,
 } = require("../controllers/userController");
+const { menuConfig } = require("../controllers/marketMakerController");
 
 // // addUser command for adding the telegram userName
 // bot.command("addUser", async (ctx) => {
@@ -31,20 +32,6 @@ const {
 //   await updateUserName(ctx);
 // });
 
-bot.start(async (ctx) => {
-  try {
-    await isNotAuthorized(ctx);
-    await signInView(ctx, bot);
-  } catch (err) {
-    ctx.reply(err.message);
-    await setTimeout(() => {
-      let id =
-        ctx.update.message?.message_id ||
-        ctx.update.callback_query?.message.message_id;
-      deleteMessage(ctx, bot, id + 1);
-    }, 2000);
-  }
-});
 //******************************* Actions commands
 
 bot.action("sign-in", async (ctx) => {

@@ -3,11 +3,10 @@ const { Scenes, session } = require("telegraf");
 const bot = require("./bot");
 const server = require("./server");
 const chalk = require("chalk");
-const {MODELS} = require('./models/models')
-
 
 const { isAuthorized, isNotAuthorized } = require("./middlewares/authorized");
 const { mainMenu, signInView } = require("./view/main");
+const { menuConfig } = require("./controllers/marketMakerController");
 // Yaz54321&&
 
 // const {
@@ -47,7 +46,6 @@ const {
 } = require("./scenes/reportScenes");
 
 const { updateStatusScene, getStatusScene } = require("./scenes/statusScenes");
-const { addingPairScene ,createAddingPairScene} = require("./scenes/addingPairScene");
 
 const {
   getPriceStrategyScene,
@@ -71,7 +69,7 @@ server();
 
 const launchBot = async () => {
   try {
-    await bot.launch();
+    bot.launch();
     console.log(chalk.white.bgGreenBright.bold(`The bot is launched...`));
   } catch (err) {
     if (err.message) {
@@ -97,32 +95,52 @@ let stage = new Scenes.Stage([
   orderCancelationScene,
   orderGapScene,
   signin,
-  addingPairScene
-  // addingPairScene
 ]);
 
-// bot.use(async (ctx, next) => {
-//   try {
-//     deleteMessage(ctx, bot);
-//     next();
-//   } catch (err) {
-//     console.log(err);
-//   }
-// });
+bot.use(async (ctx, next) => {
+  try {
+    await ctx.sendChatAction("typing");
+    next();
+  } catch (err) {
+    console.log(err.message);
+  }
+});
+
+bot.use(async (ctx, next) => {
+  try {
+    deleteMessage(ctx, bot);
+    next();
+  } catch (err) {
+    console.log(err);
+  }
+});
 
 stage.command("menu", async (ctx) => {
   try {
-    await isAuthorized(ctx);
-    ctx.scene.leave();
-    await mainMenu(ctx, bot);
+    await menuConfig(ctx, bot);
+  } catch (err) {
+    console.log(`Error: ${err.message}`);
+  }
+});
+
+stage.start(async (ctx) => {
+  try {
+    const auth = await isNotAuthorized(ctx);
+
+    if (auth !== 0) {
+      return await menuConfig(ctx, bot);
+    }
+
+    await signInView(ctx, bot);
   } catch (err) {
     ctx.reply(err.message);
+    console.log(err);
     await setTimeout(() => {
       let id =
         ctx.update.message?.message_id ||
         ctx.update.callback_query?.message.message_id;
       deleteMessage(ctx, bot, id + 1);
-    }, 1000);
+    }, 2000);
   }
 });
 
@@ -233,8 +251,13 @@ require("./commands/marketMaker");
 
 // Catch the Errors
 bot.catch((err, ctx) => {
+  console.log("Test error here");
   console.log(`Ooops, encountered an error for`, err);
 });
+
+// Enable graceful stop
+process.once("SIGINT", () => bot.stop("SIGINT"));
+process.once("SIGTERM", () => bot.stop("SIGTERM"));
 
 launchBot();
 

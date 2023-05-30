@@ -18,7 +18,7 @@ const signin = new Scenes.WizardScene(
   async (ctx) => {
     try {
       // Ask for the email Address
-      ctx.reply(`Please Enter your email address to sign in`, {
+      await ctx.reply(`Please Enter your email address to sign in`, {
         reply_markup: {
           inline_keyboard: [[{ text: "Cancel", callback_data: "No" }]],
         },
@@ -65,7 +65,7 @@ const signin = new Scenes.WizardScene(
 
       await deleteMessage(ctx, bot, ctx.wizard.state.delete + 1);
 
-      ctx.reply(`Please Enter your password`, {
+      await ctx.reply(`Please Enter your password`, {
         reply_markup: {
           inline_keyboard: [[{ text: "Cancel", callback_data: "No" }]],
         },
@@ -123,7 +123,7 @@ const signin = new Scenes.WizardScene(
       // we will handle the error that coming from the sign in and the update User
       console.log(err);
 
-      ctx.reply(err.message);
+      await ctx.reply(err.message);
       await setTimeout(() => {
         let id = ctx.update.message.message_id + 1;
         deleteMessage(ctx, bot, id);
