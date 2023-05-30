@@ -19,8 +19,8 @@ const {
   activityReportList,
   statusReportList,
   pairsList,
-  priceStratigyList,
-  changeStratigyList,
+  priceStrategyList,
+  changeStrategyList,
 } = require("../view/marketMaker");
 
 bot.use(async (ctx, next) => {
@@ -303,7 +303,7 @@ bot.action("getPairs", async (ctx) => {
 bot.action("priceStrategy", async (ctx) => {
   try {
     // get the list of the available operations related with the price strategy
-    await priceStratigyList(ctx, bot);
+    await priceStrategyList(ctx, bot);
   } catch (err) {
     console.log(err);
   }
@@ -319,7 +319,7 @@ bot.action("getPriceStrategies", async (ctx) => {
 
 bot.action("changePriceStrategies", async (ctx) => {
   try {
-    await changeStratigyList(ctx, bot);
+    await changeStrategyList(ctx, bot);
   } catch (err) {
     console.log(err);
   }
@@ -404,7 +404,7 @@ bot.action("backPair", async (ctx) => {
 
 bot.action("backPriceStrategy", async (ctx) => {
   try {
-    await priceStratigyList(ctx, bot);
+    await priceStrategyList(ctx, bot);
   } catch (err) {
     console.log(err);
   }
@@ -412,7 +412,7 @@ bot.action("backPriceStrategy", async (ctx) => {
 
 bot.action("backChangeStrategy", async (ctx) => {
   try {
-    await changeStratigyList(ctx, bot);
+    await changeStrategyList(ctx, bot);
   } catch (err) {
     console.log(err);
   }

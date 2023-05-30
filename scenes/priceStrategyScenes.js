@@ -10,8 +10,8 @@ const {
   updatePriceStrategy,
 } = require("../models/PriceStrategy");
 const {
-  changeStratigyList,
-  priceStratigyList,
+  changeStrategyList,
+  priceStrategyList,
 } = require("../view/marketMaker");
 
 // ********************************************** updateStrategyThresholdScene **********************
@@ -42,7 +42,7 @@ const updateStrategyThresholdScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await changeStratigyList(ctx, bot);
+        await changeStrategyList(ctx, bot);
         return ctx.scene.leave();
       }
 
@@ -104,7 +104,7 @@ const updateStrategyThresholdScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await changeStratigyList(ctx, bot);
+        await changeStrategyList(ctx, bot);
         return ctx.scene.leave();
       }
 
@@ -157,7 +157,7 @@ const updateStrategyThresholdScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await changeStratigyList(ctx, bot);
+        await changeStrategyList(ctx, bot);
         return ctx.scene.leave();
       }
 
@@ -229,7 +229,7 @@ const updateStrategyThresholdScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await changeStratigyList(ctx, bot);
+        await changeStrategyList(ctx, bot);
         return ctx.scene.leave();
       }
 
@@ -281,7 +281,7 @@ const updateStrategyThresholdScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await changeStratigyList(ctx, bot);
+        await changeStrategyList(ctx, bot);
         return ctx.scene.leave();
       }
     } catch (error) {
@@ -324,7 +324,7 @@ const updateStrategyTypeScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await changeStratigyList(ctx, bot);
+        await changeStrategyList(ctx, bot);
         return ctx.scene.leave();
       }
 
@@ -386,7 +386,7 @@ const updateStrategyTypeScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await changeStratigyList(ctx, bot);
+        await changeStrategyList(ctx, bot);
         return ctx.scene.leave();
       }
 
@@ -460,7 +460,7 @@ const updateStrategyTypeScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await changeStratigyList(ctx, bot);
+        await changeStrategyList(ctx, bot);
         return ctx.scene.leave();
       }
 
@@ -521,7 +521,7 @@ const updateStrategyTypeScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await changeStratigyList(ctx, bot);
+        await changeStrategyList(ctx, bot);
         return ctx.scene.leave();
       }
 
@@ -573,7 +573,7 @@ const updateStrategyTypeScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await changeStratigyList(ctx, bot);
+        await changeStrategyList(ctx, bot);
         return ctx.scene.leave();
       }
     } catch (error) {
@@ -617,7 +617,7 @@ const getPriceStrategyScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await priceStratigyList(ctx, bot);
+        await priceStrategyList(ctx, bot);
         return ctx.scene.leave();
       }
 
@@ -676,7 +676,7 @@ const getPriceStrategyScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await priceStratigyList(ctx, bot);
+        await priceStrategyList(ctx, bot);
         return ctx.scene.leave();
       }
 
@@ -724,7 +724,7 @@ const getPriceStrategyScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await priceStratigyList(ctx, bot);
+        await priceStrategyList(ctx, bot);
         return ctx.scene.leave();
       }
     } catch (error) {
