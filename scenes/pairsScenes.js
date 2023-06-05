@@ -10,14 +10,12 @@ const { mainMenu } = require("../view/main");
 // ********************************************** update the cancelation time out **********************
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
-
-const orderCancelationScene = new Scenes.WizardScene(
-  "orderCancelationScene",
-  //   first stage
-  async (ctx) => {
+function choosePairStage() {
+  const stage = async (ctx) => {
     try {
       let query;
 
+      console.log("choosing the pair");
       if (ctx.message?.text) {
         ctx.reply(`Please choose from the above menu`);
         await setTimeout(() => {
@@ -35,38 +33,35 @@ const orderCancelationScene = new Scenes.WizardScene(
         console.log(query);
       }
 
-      if (query === "main") {
-        await mainMenu(ctx, bot);
+      if (query === "limit") {
+        await leaveFunction(ctx, bot);
         return ctx.scene.leave();
       }
-
       const adminId = await getAdmin(ctx);
 
+      // get the limit amount colction
       const pairs = await getPairs(adminId);
+      console.log(pairs);
 
       let pairsArray = [[]];
 
       pairs.forEach((doc) => {
-        pairsArray.push([{ text: doc.id, callback_data: doc.id }]);
+        pairsArray.push([{ text: doc.data.pair, callback_data: doc.id }]);
       });
 
       pairsArray.push([{ text: "Back", callback_data: "main" }]);
-
-      ctx.reply("Please Enter which pair you want to change", {
+      console.log(pairsArray);
+      await ctx.reply("Please Enter which pair you want to change", {
         reply_markup: {
           inline_keyboard: pairsArray,
         },
       });
 
-      //  to store the data and pass it throgh middle ware
       ctx.wizard.state.data = {};
-
-      //   store the adminId to the session and pass it to the next middleware
       ctx.wizard.state.adminId = adminId;
 
-      return ctx.wizard.next();
+      ctx.wizard.next();
     } catch (err) {
-      // reply with the error
       console.log(err);
       ctx.reply(err.message, {
         reply_markup: {
@@ -74,11 +69,18 @@ const orderCancelationScene = new Scenes.WizardScene(
         },
       });
     }
-  },
+  };
+
+  return stage;
+}
+
+const orderCancelationScene = new Scenes.WizardScene(
+  "orderCancelationScene",
+  choosePairStage(),
   //   secound stage
   async (ctx) => {
     try {
-      let amount, query;
+      let query;
 
       // Only inlineKeyboard is working others must doesn't works
       if (ctx.message?.text) {
@@ -111,11 +113,7 @@ const orderCancelationScene = new Scenes.WizardScene(
       );
 
       ctx.wizard.state.pairData = pairData;
-      displayData(
-        ctx,
-        pairData,
-        `\n\nPlease enter the new cancelation timeout`
-      );
+      displayData(ctx, pairData, `\n\nPlease enter the new orders timeout`);
 
       ctx.wizard.next();
     } catch (err) {
@@ -175,7 +173,7 @@ const orderCancelationScene = new Scenes.WizardScene(
       }
 
       //  delete the message
-      await deleteMessage(ctx, bot, ctx.wizard.state.delete + 1);
+      await deleteMessage(ctx, bot, ctx.wizard.state.delete);
 
       //   add the new cancelation time to the pairdata to display it
       ctx.wizard.state.pairData.orderTimeout = cancelationTimeout;
@@ -293,68 +291,7 @@ const orderCancelationScene = new Scenes.WizardScene(
 
 const orderGapScene = new Scenes.WizardScene(
   "orderGapScene",
-  //   first stage
-  async (ctx) => {
-    try {
-      let query;
-
-      if (ctx.message?.text) {
-        ctx.reply(`Please choose from the above menu`);
-        await setTimeout(() => {
-          let id = ctx.update.message.message_id + 1;
-          deleteMessage(ctx, bot, id);
-        }, 1000);
-
-        // store the new data
-        return;
-      }
-
-      // check if the ctx came from the inline keyboard
-      if (ctx.update.callback_query) {
-        query = ctx.update.callback_query.data;
-        console.log(query);
-      }
-
-      if (query === "main") {
-        await mainMenu(ctx, bot);
-        return ctx.scene.leave();
-      }
-
-      const adminId = await getAdmin(ctx);
-
-      const pairs = await getPairs(adminId);
-
-      let pairsArray = [[]];
-
-      pairs.forEach((doc) => {
-        pairsArray.push([{ text: doc.id, callback_data: doc.id }]);
-      });
-
-      pairsArray.push([{ text: "Back", callback_data: "main" }]);
-
-      ctx.reply("Please Enter which pair you want to change", {
-        reply_markup: {
-          inline_keyboard: pairsArray,
-        },
-      });
-
-      //  to store the data and pass it throgh middle ware
-      ctx.wizard.state.data = {};
-
-      //   store the adminId to the session and pass it to the next middleware
-      ctx.wizard.state.adminId = adminId;
-
-      return ctx.wizard.next();
-    } catch (err) {
-      // reply with the error
-      console.log(err);
-      ctx.reply(err.message, {
-        reply_markup: {
-          inline_keyboard: [[{ text: "Back", callback_data: "main" }]],
-        },
-      });
-    }
-  },
+  choosePairStage(),
   //   secound stage
   async (ctx) => {
     try {
@@ -391,7 +328,11 @@ const orderGapScene = new Scenes.WizardScene(
       );
 
       ctx.wizard.state.pairData = pairData;
-      displayData(ctx, pairData, `\n\nPlease enter the new Buy/Sell Gap`);
+      displayData(
+        ctx,
+        pairData,
+        `\n\nPlease enter the new Buy and Sell Amount difference`
+      );
 
       ctx.wizard.next();
     } catch (err) {
@@ -447,7 +388,7 @@ const orderGapScene = new Scenes.WizardScene(
       }
 
       //  delete the message
-      await deleteMessage(ctx, bot, ctx.wizard.state.delete + 1);
+      await deleteMessage(ctx, bot, ctx.wizard.state.delete);
 
       //   add the new cancelation time to the pairdata to display it
       ctx.wizard.state.pairData.buySellDiff = gap;
@@ -473,7 +414,7 @@ const orderGapScene = new Scenes.WizardScene(
   async (ctx) => {
     try {
       if (ctx.message?.text) {
-        ctx.reply(`Please choose from the above menu`);
+        await ctx.reply(`Please choose from the above menu`);
         await setTimeout(() => {
           let id = ctx.update.message.message_id + 1;
           deleteMessage(ctx, bot, id);
@@ -563,23 +504,26 @@ const orderGapScene = new Scenes.WizardScene(
 
 // displays messages
 const displayData = async (ctx, data, msg) => {
-  try {
-    // display the data and ask for the new data
-    await ctx.reply(
-      `
-      The Pair data values,\nPair: ${data.pair}\nEngine: ${data.engine}\nBase: ${data.base}\namount: ${data.limit}\nprecent: ${data.precent}\nBuy&Sell Gap: ${data.buySellDiff}\nCancelation timeout: ${data.orderTimeout}${msg}`,
-      {
-        reply_markup: {
-          inline_keyboard: [[{ text: "Back", callback_data: "main" }]],
-        },
-      }
-    );
+  // display the data and ask for the new data
+  console.log(`The data`, data);
+  await ctx.reply(
+    `
+      The pair data (${data.pair}),\n\nEngine: ${data.engine}\nBase: ${data.base}\nQuote: ${data.quote}\nprecent: ${data.precent}\nBuy and Sell Amount difference: ${data.buySellDiff}\nOrders Timeout: ${data.orderTimeout} (seconds)${msg}`,
+    {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Back", callback_data: "main" }]],
+      },
+    }
+  );
 
-    ctx.wizard.state.delete =
-      ctx.update.message?.message_id ||
-      ctx.update.callback_query?.message.message_id;
-  } finally {
-  }
+  ctx.wizard.state.delete =
+    ctx.update.message?.message_id ||
+    ctx.update.callback_query?.message.message_id + 1;
+};
+
+const leaveFunction = async (ctx, bot) => {
+  // leave to the limit menu
+  await limitOrderList(ctx, bot);
 };
 
 const confirmationQuestion = async (ctx, data, msg) => {
@@ -587,7 +531,7 @@ const confirmationQuestion = async (ctx, data, msg) => {
     // display the data and ask for the new data
     await ctx.reply(
       `
-     The Pair data values,\nPair: ${data.pair}\nEngine: ${data.engine}\nBase: ${data.base}\namount: ${data.limit}\nprecent: ${data.precent}\nBuy&Sell Gap: ${data.buySellDiff}\nCancelation timeout: ${data.orderTimeout}${msg}`,
+      The pair data (${data.pair}),\n\nEngine: ${data.engine}\nBase: ${data.base}\nQuote: ${data.quote}\nprecent: ${data.precent}\nBuy and Sell Amount difference: ${data.buySellDiff}\nOrders Timeout: ${data.orderTimeout} (seconds)${msg}`,
       {
         reply_markup: {
           inline_keyboard: [

@@ -11,13 +11,11 @@ const deleteMessage = require("../utils/deleteMessage");
 // } = require("../models/MarketMakerModule");
 
 const { getStatuses, updateStatus } = require("../models/Status");
-const { getPairs } = require("../models/Pairs");
+const { getPairs, getPair } = require("../models/Pairs");
 const { getAdmin } = require("../models/User");
 
-const updateStatusScene = new Scenes.WizardScene(
-  "updateStatusScene",
-  //   first stage
-  async (ctx) => {
+function choosePairStage() {
+  const stage = async (ctx) => {
     try {
       let query;
 
@@ -50,7 +48,7 @@ const updateStatusScene = new Scenes.WizardScene(
       let pairsArray = [[]];
 
       pairs.forEach((doc) => {
-        pairsArray.push([{ text: doc.id, callback_data: doc.id }]);
+        pairsArray.push([{ text: doc.data.pair, callback_data: doc.id }]);
       });
 
       pairsArray.push([{ text: "Back", callback_data: "status" }]);
@@ -76,7 +74,15 @@ const updateStatusScene = new Scenes.WizardScene(
         },
       });
     }
-  },
+  };
+
+  return stage;
+}
+
+const updateStatusScene = new Scenes.WizardScene(
+  "updateStatusScene",
+  //   first stage
+  choosePairStage(),
   //   secound stage
   async (ctx) => {
     let query;
@@ -105,80 +111,7 @@ const updateStatusScene = new Scenes.WizardScene(
 
       ctx.wizard.state.pairId = query;
 
-      const statusSnapshot = await getStatuses(ctx.wizard.state.adminId, query);
-
-      const statusConfigList = [[]];
-
-      statusSnapshot.forEach((doc) => {
-        statusConfigList.push([{ text: doc.id, callback_data: doc.id }]);
-      });
-
-      statusConfigList.push([{ text: "Back", callback_data: "status" }]);
-
-      await ctx.reply("Please Enter which status you want to change", {
-        reply_markup: {
-          inline_keyboard: statusConfigList,
-        },
-      });
-      // next middleware
-      return ctx.wizard.next();
-    } catch (err) {
-      // reply with the error
-      console.log(err);
-      await ctx.reply(err.message, {
-        reply_markup: {
-          inline_keyboard: [[{ text: "Back", callback_data: "status" }]],
-        },
-      });
-    }
-  },
-  //   third stage
-  async (ctx) => {
-    try {
-      let amount, query;
-
-      // Only inlineKeyboard is working others must doesn't works
-      if (ctx.message?.text) {
-        await ctx.reply(`Please choose from the above menu`);
-        await setTimeout(() => {
-          let id = ctx.update.message.message_id + 1;
-          deleteMessage(ctx, bot, id);
-        }, 1000);
-
-        // store the new data
-        return;
-      }
-
-      // check if the ctx came from the inline keyboard
-      if (ctx.update.callback_query) {
-        query = ctx.update.callback_query.data;
-      }
-
-      // // if the user didn't confirmed
-      // if (query === `No`) {
-      //   ctx.reply("No changes happened, Thanks for interacting with me.", {
-      //     reply_markup: {
-      //       inline_keyboard: [
-      //         statuses,
-      //         [{ text: "Back", callback_data: "status" }],
-      //       ],
-      //     },
-      //   });
-      //   return ctx.wizard.next();
-      // }
-
-      if (query === "status") {
-        await statusReportList(ctx, bot);
-        return ctx.scene.leave();
-      }
-
-      // //   check if the status doc is exist
-
-      // const statusDoc = await getDoc(query);
-
-      ctx.wizard.state.statusId = query;
-
-      await ctx.reply(`Please Enter The New Status`, {
+      await ctx.reply(`Please enter the new status`, {
         reply_markup: {
           inline_keyboard: [
             [{ text: "Working", callback_data: "working" }],
@@ -188,7 +121,7 @@ const updateStatusScene = new Scenes.WizardScene(
         },
       });
 
-      ctx.wizard.next();
+      return ctx.wizard.next();
     } catch (err) {
       // reply with the error
       console.log(err);
@@ -241,8 +174,17 @@ const updateStatusScene = new Scenes.WizardScene(
 
       const data = ctx.wizard.state.data;
 
+      const pair = await getPair(
+        ctx.wizard.state.pairId,
+        ctx.wizard.state.adminId
+      );
+
+      if (!pair) {
+        throw new Error(`The pair doesn't exist, Please try again later...`);
+      }
+
       await ctx.reply(
-        `Please confirm the new data:\n\nId: ${ctx.wizard.state.statusId}\nStatus: ${data.status}\nReason: ${data.reason}`,
+        `The Pair: ${pair.pair}\n\nThe engine: ${pair.engineName}\nThe symbol: ${pair.symbol}\nThe status: ${data.status}\nThe threshold: ${data.reason}\n\nPlease confirm the new data`,
         {
           reply_markup: {
             inline_keyboard: [
@@ -252,6 +194,8 @@ const updateStatusScene = new Scenes.WizardScene(
           },
         }
       );
+
+      ctx.wizard.state.pair = pair;
 
       ctx.wizard.next();
     } catch (err) {
@@ -304,12 +248,13 @@ const updateStatusScene = new Scenes.WizardScene(
       await updateStatus(
         data,
         ctx.wizard.state.adminId,
-        ctx.wizard.state.pairId,
-        ctx.wizard.state.statusId
+        ctx.wizard.state.pairId
       );
 
+      let pair = ctx.wizard.state.pair;
+
       await ctx.reply(
-        `The status has been changed\n\nId: ${ctx.wizard.state.statusId}\nStatus: ${data.status}\nReason: ${data.reason}`,
+        `The Pair: ${pair.pair}\n\nThe engine: ${pair.engineName}\nThe symbol: ${pair.symbol}\nThe status: ${data.status}\nThe threshold: ${data.reason}\n\nThe status has been updated`,
         {
           reply_markup: {
             inline_keyboard: [[{ text: "Back", callback_data: "status" }]],
@@ -361,68 +306,12 @@ const updateStatusScene = new Scenes.WizardScene(
   }
 );
 
+// ********************************************** getStatusScene **********************
+// //////////////////////////////////////////////////////////////////////////////////////////////////
 const getStatusScene = new Scenes.WizardScene(
   "getStatusScene",
   // first stage
-  async (ctx) => {
-    try {
-      let query;
-      console.log(`status stage`);
-      if (ctx.message?.text) {
-        ctx.reply(`Please choose from the above menu`);
-        await setTimeout(() => {
-          let id = ctx.update.message.message_id + 1;
-          deleteMessage(ctx, bot, id);
-        }, 1000);
-
-        // store the new data
-        return;
-      }
-
-      // check if the ctx came from the inline keyboard
-      if (ctx.update.callback_query) {
-        query = ctx.update.callback_query.data;
-        console.log(query);
-      }
-
-      if (query === "status") {
-        await statusReportList(ctx, bot);
-        return ctx.scene.leave();
-      }
-
-      const adminId = await getAdmin(ctx);
-
-      const pairs = await getPairs(adminId);
-
-      let pairsArray = [[]];
-
-      pairs.forEach((doc) => {
-        pairsArray.push([{ text: doc.id, callback_data: doc.id }]);
-      });
-
-      pairsArray.push([{ text: "Back", callback_data: "status" }]);
-
-      await ctx.reply("Select the pair to get the statuses", {
-        reply_markup: {
-          inline_keyboard: pairsArray,
-        },
-      });
-
-      // to store the data and pass it throgh middle ware
-      ctx.wizard.state.data = {};
-
-      ctx.wizard.state.adminId = adminId;
-
-      return ctx.wizard.next();
-    } catch (err) {
-      console.log(err);
-      await ctx.reply(err.message, {
-        reply_markup: {
-          inline_keyboard: [[{ text: "Back", callback_data: "status" }]],
-        },
-      });
-    }
-  },
+  choosePairStage(),
   //   secound stage
   async (ctx) => {
     let query;
@@ -451,17 +340,20 @@ const getStatusScene = new Scenes.WizardScene(
 
       ctx.wizard.state.pairId = query;
 
+      const pair = await getPair(
+        ctx.wizard.state.pairId,
+        ctx.wizard.state.adminId
+      );
+
       const statusSnapshot = await getStatuses(
         ctx.wizard.state.adminId,
         ctx.wizard.state.pairId
       );
 
-      let msg = `The statuses for the pair ${ctx.wizard.state.pairId}`;
+      let msg = `The statuses for the pair ${pair.pair}`;
 
       statusSnapshot.forEach((doc) => {
-        msg += `\n\nThe Statis Id: ${doc.id}\nThe Pair: ${
-          doc.data().pair
-        }\nThe Engine: ${doc.data().engine}\nThe Status: ${
+        msg += `\n\nThe engine: ${pair.engineName}\nThe status: ${
           doc.data().status
         }\nThe reason: ${doc.data().reason}`;
       });

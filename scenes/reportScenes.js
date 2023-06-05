@@ -10,12 +10,11 @@ const { activityReportList } = require("../view/marketMaker");
 const bot = require("../bot");
 const deleteMessage = require("../utils/deleteMessage");
 const { getAdmin } = require("../models/User");
-const { getPairs } = require("../models/Pairs");
+const { getPairs, getPair } = require("../models/Pairs");
 const { report } = require("../Api/api");
-const createReportScene = new Scenes.WizardScene(
-  "createReportScene",
-  // first stage
-  async (ctx) => {
+
+function choosePair(msg) {
+  const stage = async (ctx) => {
     try {
       let query;
 
@@ -48,12 +47,12 @@ const createReportScene = new Scenes.WizardScene(
       let pairsArray = [[]];
 
       pairs.forEach((doc) => {
-        pairsArray.push([{ text: doc.id, callback_data: doc.id }]);
+        pairsArray.push([{ text: doc.data.pair, callback_data: doc.id }]);
       });
 
       pairsArray.push([{ text: "Back", callback_data: "activity" }]);
 
-      ctx.reply("Please Enter which pair you want to change", {
+      ctx.reply(msg, {
         reply_markup: {
           inline_keyboard: pairsArray,
         },
@@ -74,7 +73,12 @@ const createReportScene = new Scenes.WizardScene(
         },
       });
     }
-  },
+  };
+  return stage;
+}
+const createReportScene = new Scenes.WizardScene(
+  "createReportScene",
+  choosePair("Choose the pair to start recieve the trading activity report"),
   //   secound stage
   async (ctx) => {
     let query;
@@ -282,7 +286,7 @@ const createReportScene = new Scenes.WizardScene(
 
       ctx.wizard.state.data.period = query;
 
-      ctx.reply(`Please Enter a specific time to receive the Report at it`, {
+      ctx.reply(`Please enter a specific time to receive the Report at it`, {
         reply_markup: {
           inline_keyboard: [[{ text: "Cancel", callback_data: "No" }]],
         },
@@ -316,26 +320,56 @@ const createReportScene = new Scenes.WizardScene(
         await activityReportList(ctx, bot);
         return ctx.scene.leave();
       }
-
       // when the user use inline keyboard the text is empty and generate an error
       if (time) {
         // store the new data
-        ctx.wizard.state.data.time = ctx.message.text + ":00";
+        time = time.split(":");
+
+        if (time.lenght < 2) {
+          throw new ErrorResponse(`Please Enter the valid number`);
+        }
+        ctx.wizard.state.data.hours = time[0];
+        ctx.wizard.state.data.minutes = ctx.message.text[1];
+
+        // handle the minutes part here
+        if (time[1].length < 2) {
+          time[1] = time[1] + "0";
+        }
+
+        console.log(time[1]);
       }
 
       console.log(`the data to be stored`, ctx.wizard.state.data);
 
-      if (isNaN(time) || 23 >= time <= 0) {
+      // check if the user enter a wrong format
+      if (
+        isNaN(time[0]) ||
+        23 >= time[0] <= 0 ||
+        isNaN(time[1]) ||
+        60 > time[1] <= 0
+      ) {
         throw new ErrorResponse(`Please Enter the valid number`);
       }
+
+      ctx.wizard.state.data.time = time.join(":");
 
       deleteMessage(ctx, bot, ctx.wizard.state.delete + 1);
 
       const data = ctx.wizard.state.data;
 
+      const pair = await getPair(
+        ctx.wizard.state.pairId,
+        ctx.wizard.state.adminId
+      );
+
+      if (!pair) {
+        throw new Error(`The pair doesn't exist, Please try again later...`);
+      }
+
+      ctx.wizard.state.pair = pair;
       // ask for confirmation
       ctx.reply(
-        `Please confirm the new data:\n\nDestination: ${data.reportDest}\nReport_Type: ${data.reportType}\nTime: ${data.time}\nperiod: ${data.period}\nAdmin_Id: ${ctx.wizard.state.adminId}\nPairId: ${ctx.wizard.state.pairId}`,
+        `The report for the Pair: ${pair.pair}\n\nThe engine: ${pair.engine}\nThe destination: ${data.reportDest}\nThe report type: ${data.reportType}\nThe time: ${data.time}\nThe period: ${data.period}\n\nPlease confirm the new data:`,
         {
           reply_markup: {
             inline_keyboard: [
@@ -393,7 +427,7 @@ const createReportScene = new Scenes.WizardScene(
       await createReport(state.data, state.adminId, state.pairId);
 
       ctx.reply(
-        `The Report config has been created\n\nDestination: ${state.data.reportDest}\nReport_Type: ${state.data.reportType}\nTime: ${state.data.time}\nperiod: ${state.data.period}\nAdmin_Id: ${state.adminId}\nPairId: ${ctx.wizard.state.pairId}`,
+        `The report for the Pair: ${ctx.wizard.state.pair.pair}\n\nThe engine: ${ctx.wizard.state.pair.engine}\nThe destination: ${ctx.wizard.state.data.reportDest}\nThe report type: ${ctx.wizard.state.data.reportType}\nThe time: ${ctx.wizard.state.data.time}\nThe period: ${ctx.wizard.state.data.period}\n\nThe report config has been created`,
         {
           reply_markup: {
             inline_keyboard: [[{ text: "Back", callback_data: "activity" }]],
@@ -440,66 +474,7 @@ const createReportScene = new Scenes.WizardScene(
 // **************************************** Get Reports **********************************
 const getReportScene = new Scenes.WizardScene(
   "getReportScene",
-  async (ctx) => {
-    try {
-      let query;
-
-      if (ctx.message?.text) {
-        ctx.reply(`Please choose from the above menu`);
-        await setTimeout(() => {
-          let id = ctx.update.message.message_id + 1;
-          deleteMessage(ctx, bot, id);
-        }, 1000);
-
-        // store the new data
-        return;
-      }
-
-      // check if the ctx came from the inline keyboard
-      if (ctx.update.callback_query) {
-        query = ctx.update.callback_query.data;
-        console.log(query);
-      }
-
-      if (query === "activity") {
-        await activityReportList(ctx, bot);
-        return ctx.scene.leave();
-      }
-
-      const adminId = await getAdmin(ctx);
-
-      const pairs = await getPairs(adminId);
-
-      let pairsArray = [[]];
-
-      pairs.forEach((doc) => {
-        pairsArray.push([{ text: doc.id, callback_data: doc.id }]);
-      });
-
-      pairsArray.push([{ text: "Back", callback_data: "activity" }]);
-
-      ctx.reply("Please Enter which pair you want to change", {
-        reply_markup: {
-          inline_keyboard: pairsArray,
-        },
-      });
-
-      // to store the data and pass it throgh middle ware
-      ctx.wizard.state.data = {};
-
-      ctx.wizard.state.adminId = adminId;
-
-      return ctx.wizard.next();
-    } catch (err) {
-      // reply with the error
-      console.log(err);
-      ctx.reply(err.message, {
-        reply_markup: {
-          inline_keyboard: [[{ text: "Back", callback_data: "activity" }]],
-        },
-      });
-    }
-  },
+  choosePair("Choose the pair to get the reports schedules"),
   // secound stage
   async (ctx) => {
     try {
@@ -533,10 +508,15 @@ const getReportScene = new Scenes.WizardScene(
         ctx.wizard.state.adminId,
         ctx.wizard.state.pairId
       );
-      let msg = `The reports config for the chosen pair: ${ctx.wizard.state.pairId}`;
+
+      const pair = await getPair(
+        ctx.wizard.state.pairId,
+        ctx.wizard.state.adminId
+      );
+      let msg = `The reports config for the chosen pair: ${pair.pair}`;
 
       reportConfigSnapshot.forEach((doc) => {
-        msg += `\n\nConfig id: ${doc.id}\nEngine: ${doc.data().engine}\nPair: ${
+        msg += `\n\nEngine: ${doc.data().engine}\nPair: ${
           doc.data().pair
         }\nPeriod: ${doc.data().period}\nReport Dest: ${
           doc.data().reportDest
@@ -588,65 +568,7 @@ const getReportScene = new Scenes.WizardScene(
 // **************************************** Delete Reports **********************************
 const deleteReportScene = new Scenes.WizardScene(
   "deleteReportScene",
-  async (ctx) => {
-    try {
-      let query;
-
-      if (ctx.message?.text) {
-        ctx.reply(`Please choose from the above menu`);
-        await setTimeout(() => {
-          let id = ctx.update.message.message_id + 1;
-          deleteMessage(ctx, bot, id);
-        }, 1000);
-
-        // store the new data
-        return;
-      }
-
-      // check if the ctx came from the inline keyboard
-      if (ctx.update.callback_query) {
-        query = ctx.update.callback_query.data;
-      }
-
-      if (query === "activity") {
-        await activityReportList(ctx, bot);
-        return ctx.scene.leave();
-      }
-
-      const adminId = await getAdmin(ctx);
-
-      const pairs = await getPairs(adminId);
-
-      let pairsArray = [[]];
-
-      pairs.forEach((doc) => {
-        pairsArray.push([{ text: doc.id, callback_data: doc.id }]);
-      });
-
-      pairsArray.push([{ text: "Back", callback_data: "activity" }]);
-
-      ctx.reply("Please Enter which pair you want to change", {
-        reply_markup: {
-          inline_keyboard: pairsArray,
-        },
-      });
-
-      // to store the data and pass it throgh middle ware
-      ctx.wizard.state.data = {};
-
-      ctx.wizard.state.adminId = adminId;
-
-      return ctx.wizard.next();
-    } catch (err) {
-      // reply with the error
-      console.log(err);
-      ctx.reply(err.message, {
-        reply_markup: {
-          inline_keyboard: [[{ text: "Back", callback_data: "activity" }]],
-        },
-      });
-    }
-  },
+  choosePair("Choose the pair you want to delete"),
   // secound stage
   async (ctx) => {
     try {
@@ -684,7 +606,14 @@ const deleteReportScene = new Scenes.WizardScene(
       const reportConfigList = [[]];
 
       reportConfigSnapshot.forEach((doc) => {
-        reportConfigList.push([{ text: doc.id, callback_data: doc.id }]);
+        reportConfigList.push([
+          {
+            text: `${doc.data().period}/${doc.data().reportType}/${
+              doc.data().time
+            }`,
+            callback_data: doc.id,
+          },
+        ]);
       });
 
       reportConfigList.push([{ text: "Back", callback_data: "activity" }]);
@@ -728,11 +657,12 @@ const deleteReportScene = new Scenes.WizardScene(
       if (ctx.update.callback_query) {
         query = ctx.update.callback_query.data;
       }
-
+      console.log("here");
       if (query === "activity") {
         await activityReportList(ctx, bot);
         return ctx.scene.leave();
       }
+      console.log("here");
 
       ctx.wizard.state.reportId = query;
 
@@ -742,8 +672,20 @@ const deleteReportScene = new Scenes.WizardScene(
         ctx.wizard.state.reportId
       );
 
+      const pair = await getPair(
+        ctx.wizard.state.pairId,
+        ctx.wizard.state.adminId
+      );
+
+      if (!pair) {
+        throw new Error(`The pair doesn't exist, Please try again later...`);
+      }
+
+      ctx.wizard.state.report = report;
+      ctx.wizard.state.pair = pair;
+
       ctx.reply(
-        `Please confirm you want to delete the report config:\n\nDestination: ${report.reportDest}\nReport_Type: ${report.reportType}\nTime: ${report.time}\nperiod: ${report.period}\nAdmin_Id: ${report.adminId}\nPairId: ${report.pairId}`,
+        `Pair: ${pair.pair}\n\nDestination: ${report?.reportDest}\nReport_Type: ${report?.reportType}\nTime: ${report?.time}\nperiod: ${report?.period}\n\nPlease confirm you want to delete the report config:`,
         {
           reply_markup: {
             inline_keyboard: [
@@ -756,7 +698,8 @@ const deleteReportScene = new Scenes.WizardScene(
 
       ctx.wizard.next();
     } catch (err) {
-      // reply with the error
+      console.log(err);
+
       await activityReportList(ctx, bot);
       ctx.scene.leave();
     }
@@ -799,7 +742,7 @@ const deleteReportScene = new Scenes.WizardScene(
       );
 
       ctx.reply(
-        `The report config ${ctx.wizard.state.reportId} has been deleted`,
+        `Pair: ${ctx.wizard.state.pair.pair}\n\nDestination: ${ctx.wizard.state.report?.reportDest}\nReport_Type: ${ctx.wizard.state.report?.reportType}\nTime: ${ctx.wizard.state.report?.time}\nperiod: ${ctx.wizard.state.report?.period}\n\nThe report config has been delete`,
         {
           reply_markup: {
             inline_keyboard: [[{ text: "Back", callback_data: "activity" }]],

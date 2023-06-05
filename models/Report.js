@@ -78,13 +78,13 @@ const getReportConfigData = async (adminId, pairId) => {
     const reportsSnapshot = await db
       .collection("admins")
       .doc(adminId)
-      .collection("Paris")
+      .collection("pairs")
       .doc(pairId)
       .collection("reports")
       .get();
 
     if (reportsSnapshot.empty) {
-      throw new ErrorResponse("There are no report data to display");
+      return undefined;
     }
 
     reportsSnapshot.forEach((doc) => {
@@ -103,13 +103,13 @@ const getSpecificReport = async (adminId, pairId, reportId) => {
     const pairCollection = db
       .collection("admins")
       .doc(adminId)
-      .collection("Paris")
+      .collection("pairs")
       .doc(pairId);
 
     const reportsCollection = pairCollection.collection("reports");
 
     const report = await reportsCollection.doc(reportId).get();
-
+    console.log(report.data());
     return report.data();
   } catch (err) {
     console.log(err);

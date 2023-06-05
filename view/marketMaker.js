@@ -1,18 +1,22 @@
 // limit OrderList
 const limitOrderList = async (ctx, bot) => {
   try {
-    bot.telegram.sendMessage(ctx.chat.id, `Check the below options`, {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            { text: "precent", callback_data: "precent" },
-            { text: "amount", callback_data: "amount" },
+    bot.telegram.sendMessage(
+      ctx.chat.id,
+      `Orders Limit List:\n\nPlease choose from the operations below`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: "threshold", callback_data: "precent" },
+              { text: "amount", callback_data: "amount" },
+            ],
+            [{ text: "Help", callback_data: "helpLimitList" }],
+            [{ text: "Back", callback_data: "backMain" }],
           ],
-          [{ text: "Help", callback_data: "helpLimitList" }],
-          [{ text: "Back", callback_data: "backMain" }],
-        ],
-      },
-    });
+        },
+      }
+    );
   } catch (error) {}
 };
 
@@ -21,7 +25,7 @@ const activityReportList = async (ctx, bot) => {
   try {
     bot.telegram.sendMessage(
       ctx.chat.id,
-      `Please choose from the operations below`,
+      `Trading Activity Report List:\n\nPlease choose from the operations below`,
       {
         reply_markup: {
           inline_keyboard: [
@@ -31,7 +35,7 @@ const activityReportList = async (ctx, bot) => {
             ],
             [
               { text: "Get", callback_data: "getActivityReport" },
-              { text: "Edit", callback_data: "editActivityReport" },
+              // { text: "Edit", callback_data: "editActivityReport" },
             ],
             [{ text: "Help", callback_data: "helpActivityList" }],
             [{ text: "Back", callback_data: "backMain" }],
@@ -49,13 +53,13 @@ const statusReportList = async (ctx, bot) => {
   try {
     bot.telegram.sendMessage(
       ctx.chat.id,
-      `Please choose from the operations below`,
+      `Status List:\n\nPlease choose from the operations below`,
       {
         reply_markup: {
           inline_keyboard: [
             [
-              { text: "Get", callback_data: "getStatus" },
-              { text: "Change", callback_data: "updateStatus" },
+              { text: "Get Status", callback_data: "getStatus" },
+              { text: "Change Status", callback_data: "updateStatus" },
             ],
             [{ text: "Help", callback_data: "helpStatusList" }],
             [{ text: "Back", callback_data: "backMain" }],
@@ -72,7 +76,7 @@ const pairsList = async (ctx, bot) => {
   try {
     bot.telegram.sendMessage(
       ctx.chat.id,
-      `Please choose from the operations below`,
+      `Pairs List:\n\nPlease choose from the operations below`,
       {
         reply_markup: {
           inline_keyboard: [
@@ -81,7 +85,7 @@ const pairsList = async (ctx, bot) => {
             //   { text: "Delete", callback_data: "deleteActivityReport" },
             // ],
             [
-              { text: "Get", callback_data: "getPairs" },
+              { text: "List pairs", callback_data: "getPairs" },
               // { text: "Edit", callback_data: "editActivityReport" },
             ],
             [{ text: "Help", callback_data: "helpPairs" }],
@@ -99,7 +103,7 @@ const priceStratigyList = async (ctx, bot) => {
   try {
     bot.telegram.sendMessage(
       ctx.chat.id,
-      `Please choose from the operations below`,
+      `Price Strategy List:\n\nPlease choose from the operations below`,
       {
         reply_markup: {
           inline_keyboard: [
@@ -128,7 +132,7 @@ const changeStratigyList = async (ctx, bot) => {
   try {
     bot.telegram.sendMessage(
       ctx.chat.id,
-      `Please choose from the operations below`,
+      `Change Price Strategy List:\n\nPlease choose from the operations below`,
       {
         reply_markup: {
           inline_keyboard: [

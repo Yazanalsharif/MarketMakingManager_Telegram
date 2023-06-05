@@ -12,10 +12,13 @@ const mainMenu = async (ctx, bot) => {
             { text: "Status", callback_data: "statusReport" },
             { text: "Pairs", callback_data: "pairList" },
           ],
-          [{ text: "Price Stratigy", callback_data: "priceStrategy" }],
+          [{ text: "Price Strategy", callback_data: "priceStrategy" }],
           [
-            { text: "Cancelation Timeout", callback_data: "cancelation" },
-            { text: "Orders Gap", callback_data: "ordersGap" },
+            { text: "Orders Timeout", callback_data: "cancelation" },
+            {
+              text: "Buy and Sell difference",
+              callback_data: "ordersGap",
+            },
           ],
           [{ text: "Help", callback_data: "mainMenuHelp" }],
         ],

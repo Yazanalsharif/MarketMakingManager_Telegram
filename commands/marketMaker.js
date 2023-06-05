@@ -4,6 +4,7 @@ const { mainMenu } = require("../view/main");
 const { errorHandlerBot } = require("../utils/errorHandler");
 const { isAuthorized } = require("../middlewares/authorized");
 const deleteMessage = require("../utils/deleteMessage");
+const { MODELS } = require("../models/models");
 
 const {
   updateAmountLimit,
@@ -22,6 +23,7 @@ const {
   priceStratigyList,
   changeStratigyList,
 } = require("../view/marketMaker");
+const { models } = require("mongoose");
 
 bot.use(async (ctx, next) => {
   try {
@@ -186,11 +188,17 @@ bot.action("updateStatus", async (ctx) => {
 
 bot.action("mainMenuHelp", async (ctx) => {
   try {
-    ctx.reply("Help Main Menu here", {
-      reply_markup: {
-        inline_keyboard: [[{ text: "Back", callback_data: "backMain" }]],
-      },
-    });
+    const buySellDiff = MODELS.pairs.buySellDiff;
+    const orderTimeout = MODELS.pairs.orderTimeout;
+
+    ctx.reply(
+      `Market Maker Manager\n\nThe telegram bot is one of the market maker features which you will be able to manage the market maker through it\n\n${orderTimeout.name}: ${orderTimeout.description}\n\n${buySellDiff.name}: ${buySellDiff.description}\n\nEach menu will has a help button, Please try to read it before interacting with the options`,
+      {
+        reply_markup: {
+          inline_keyboard: [[{ text: "Back", callback_data: "backMain" }]],
+        },
+      }
+    );
   } catch (err) {
     console.log(err);
   }
@@ -198,11 +206,14 @@ bot.action("mainMenuHelp", async (ctx) => {
 
 bot.action("helpActivityList", async (ctx) => {
   try {
-    ctx.reply("Help Report Menu here", {
-      reply_markup: {
-        inline_keyboard: [[{ text: "Back", callback_data: "backReport" }]],
-      },
-    });
+    ctx.reply(
+      `Pairs activity report:\n\nYou can setup a config to receive reports from the engine at specific time in different periods(daily, monthly), The report will include the whole transactions that made by the engine.\n\nThe time format must be 00:00, otherwise you will not able to add the time`,
+      {
+        reply_markup: {
+          inline_keyboard: [[{ text: "Back", callback_data: "backReport" }]],
+        },
+      }
+    );
   } catch (err) {
     console.log(err);
   }
@@ -210,11 +221,14 @@ bot.action("helpActivityList", async (ctx) => {
 
 bot.action("helpStatusList", async (ctx) => {
   try {
-    ctx.reply("Help Status List here", {
-      reply_markup: {
-        inline_keyboard: [[{ text: "Back", callback_data: "backStatus" }]],
-      },
-    });
+    ctx.reply(
+      `Status Pairs:\n\nWe can check the pair status, the pair is working fine if the status is (working) and stopped if the status (stopped).\n\nYou can change the status of the pair, the reason will be (Manually)\n\nIf the status changed by the Engine the reason will be attached.`,
+      {
+        reply_markup: {
+          inline_keyboard: [[{ text: "Back", callback_data: "backStatus" }]],
+        },
+      }
+    );
   } catch (err) {
     console.log(err);
   }
@@ -222,7 +236,10 @@ bot.action("helpStatusList", async (ctx) => {
 
 bot.action("helpLimitList", async (ctx) => {
   try {
-    ctx.reply("Help limit List here", {
+    // console.log(MODELS.pairs.limit.description);
+    const limitHelp = MODELS.pairs.limit.description;
+    const thresholdHelp = MODELS.pairs.threshold.description;
+    ctx.reply(`${limitHelp}\n\n${thresholdHelp}`, {
       reply_markup: {
         inline_keyboard: [[{ text: "Back", callback_data: "backLimit" }]],
       },
@@ -234,7 +251,10 @@ bot.action("helpLimitList", async (ctx) => {
 
 bot.action("helpPairs", async (ctx) => {
   try {
-    ctx.reply("helpPairs List here", {
+    const pairs = MODELS.pairs;
+    let pairHelp = `Pair List\n\nYou will be able to get the list of the pairs you have with their report configurations and statuses\n\nPairs properties:\n\n${pairs.base.name}: ${pairs.base.description}\n\n${pairs.quote.name}: ${pairs.quote.description}\n\n${pairs.limit.name}: ${pairs.limit.description}\n\n${pairs.threshold.name}: ${pairs.threshold.description}\n\n${pairs.engine.name}: ${pairs.engine.description}`;
+
+    ctx.reply(pairHelp, {
       reply_markup: {
         inline_keyboard: [[{ text: "Back", callback_data: "backPair" }]],
       },
@@ -246,13 +266,18 @@ bot.action("helpPairs", async (ctx) => {
 
 bot.action("helpPriceStrategy", async (ctx) => {
   try {
-    ctx.reply("helpPriceStrategy List here", {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "Back", callback_data: "backPriceStrategy" }],
-        ],
-      },
-    });
+    const typeHelp = MODELS.pairs.priceStrategyType.description;
+    const thresholdHelp = MODELS.pairs.priceStrategyThreshold.description;
+    ctx.reply(
+      `Price Strategy Help\n\n\nPrice strategy type: ${typeHelp}\n\n\n${thresholdHelp}`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "Back", callback_data: "backPriceStrategy" }],
+          ],
+        },
+      }
+    );
   } catch (err) {
     console.log(err);
   }
@@ -260,13 +285,16 @@ bot.action("helpPriceStrategy", async (ctx) => {
 
 bot.action("helpStrategyChange", async (ctx) => {
   try {
-    ctx.reply("helpStrategyChange List here", {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "Back", callback_data: "backChangeStrategy" }],
-        ],
-      },
-    });
+    ctx.reply(
+      `Price strategy type is a direction type, it must be one of the values (Up, Down, Random)\n\nPrice strategy threshold is a precentage, it must be between 0 and 100`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "Back", callback_data: "backChangeStrategy" }],
+          ],
+        },
+      }
+    );
   } catch (err) {
     console.log(err);
   }

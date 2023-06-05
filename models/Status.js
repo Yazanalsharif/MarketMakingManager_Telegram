@@ -37,9 +37,8 @@ const getStatusesData = async (adminId, pairId) => {
       .get();
 
     if (statusSnapshot.empty) {
-      throw new ErrorResponse("There are no pairs to display");
+      return undefined;
     }
-
     statusSnapshot.forEach((doc) => {
       statuses.push({ id: doc.id, data: doc.data() });
     });
@@ -50,22 +49,29 @@ const getStatusesData = async (adminId, pairId) => {
   }
 };
 
-const updateStatus = async (data, adminId, pairId, statusId) => {
+const updateStatus = async (data, adminId, pairId) => {
   try {
-    const statusCollection = db
+    let statusId;
+    const pairCollection = db
       .collection("admins")
       .doc(adminId)
       .collection("pairs")
-      .doc(pairId)
-      .collection("Status")
-      .doc(statusId);
+      .doc(pairId);
+
+    const statusCollection = pairCollection.collection("Status");
+
+    const statusSnapShot = await statusCollection.get();
+
+    statusSnapShot.forEach((doc) => {
+      statusId = doc.id;
+    });
 
     // update the status with a specific data that came from the user
-    const updateSnapshot = await statusCollection.update(data);
+    const updateSnapshot = await statusCollection.doc(statusId).update(data);
 
     return updateSnapshot;
-  } catch (err) {
-    console.log(err);
+  } finally {
+    console.log(`The update status function`);
   }
 };
 

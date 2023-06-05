@@ -20,6 +20,8 @@ const { getReportConfigData } = require("../models/Report");
 
 const { getPairs } = require("../models/Pairs");
 
+const { MODELS } = require("../models/models");
+
 // @Description             Change the amount_limit in the botConfig
 // access                   Admin
 const updateAmountLimit = async (ctx) => {
@@ -308,19 +310,27 @@ const getPairData = async (ctx) => {
     const pairs = await getPairs(adminId);
 
     let msg = `The Pairs informations below`;
-
+    console.log(`Get Pairs Data`);
     for (let i = 0; i < pairs.length; i++) {
       pairs[i].reportConfiges = await getReportConfigData(adminId, pairs[0].id);
       pairs[i].statuses = await getStatusesData(adminId, pairs[i].id);
 
-      msg += `\n\n\nThe Pair Id: ${pairs[i].id}\nThe Name ${pairs[i].data.pair}\nThe Engine ${pairs[i].data.engine}\nThe Base ${pairs[i].data.base}\nThe Limit ${pairs[i].data.limit}\nThe Precent ${pairs[i].data.precent}%`;
+      msg += `\n\nThe pair: ${pairs[i].data.pair}\nThe engine: ${pairs[i].data.engineName}\nThe base: ${pairs[i].data.base}\nThe quote: ${pairs[i].data.quote}\nThe limit: ${pairs[i].data.limit}\nThe threshold: ${pairs[i].data.threshold}%`;
 
-      for (let x = 0; x < pairs[i].reportConfiges.length; x++) {
-        msg += `\n\nPairs Report Config id: ${pairs[i].reportConfiges[x].id}\nThe Type: ${pairs[i].reportConfiges[x].data.reportType}\nThe Dist: ${pairs[i].reportConfiges[x].data.reportDest}\nThe Time: ${pairs[i].reportConfiges[x].data.time}`;
+      // Check if the pair and the user has a report config
+      if (pairs[i].reportConfiges) {
+        msg += `\n\nPair Activity report configs (${pairs[i].reportConfiges.length}):`;
+        for (let x = 0; x < pairs[i].reportConfiges.length; x++) {
+          msg += `\n\nThe type: ${pairs[i].reportConfiges[x].data.reportType}\nThe dist: ${pairs[i].reportConfiges[x].data.reportDest}\nThe time: ${pairs[i].reportConfiges[x].data.time}`;
+        }
       }
 
-      for (let x = 0; x < pairs[i].statuses.length; x++) {
-        msg += `\n\nPairs Status id: ${pairs[i].statuses[x].id}\nThe Engine: ${pairs[i].statuses[x].data.engine}\nThe Pair: ${pairs[i].statuses[x].data.pair}\nThe Status: ${pairs[i].statuses[x].data.status}\nThe Reason: ${pairs[i].statuses[x].data.reason}`;
+      // Check if the pair has a status in database
+      if (pairs[i].statuses) {
+        msg += `\n\nPair Status:\n`;
+        for (let x = 0; x < pairs[i].statuses.length; x++) {
+          msg += `The status: ${pairs[i].statuses[x].data.status}\nThe reason: ${pairs[i].statuses[x].data.reason}`;
+        }
       }
     }
 

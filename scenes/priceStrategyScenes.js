@@ -4,7 +4,7 @@ const ErrorResponse = require("../utils/ErrorResponse");
 const bot = require("../bot");
 const deleteMessage = require("../utils/deleteMessage");
 const { getAdmin } = require("../models/User");
-const { getPairs } = require("../models/Pairs");
+const { getPairs, getPair } = require("../models/Pairs");
 const {
   getPriceStrategy,
   updatePriceStrategy,
@@ -14,13 +14,10 @@ const {
   priceStratigyList,
 } = require("../view/marketMaker");
 
-// ********************************************** updateStrategyThresholdScene **********************
-// //////////////////////////////////////////////////////////////////////////////////////////////////
-
-const updateStrategyThresholdScene = new Scenes.WizardScene(
-  "updateStrategyThresholdScene",
-  //   first stage
-  async (ctx) => {
+// choose pair stage is a stage for diplaying the pairs name to let user choose
+function choosePairStage() {
+  const stage = async (ctx) => {
+    console.log("the price strategy pairs");
     try {
       let query;
 
@@ -42,7 +39,7 @@ const updateStrategyThresholdScene = new Scenes.WizardScene(
       }
 
       if (query === "priceStr") {
-        await changeStratigyList(ctx, bot);
+        await priceStratigyList(ctx, bot);
         return ctx.scene.leave();
       }
 
@@ -53,26 +50,24 @@ const updateStrategyThresholdScene = new Scenes.WizardScene(
       let pairsArray = [[]];
 
       pairs.forEach((doc) => {
-        pairsArray.push([{ text: doc.id, callback_data: doc.id }]);
+        pairsArray.push([{ text: doc.data.pair, callback_data: doc.id }]);
       });
 
       pairsArray.push([{ text: "Back", callback_data: "priceStr" }]);
 
-      ctx.reply("Please Enter which pair you want to change", {
+      ctx.reply("Select the pair to get the strategy price", {
         reply_markup: {
           inline_keyboard: pairsArray,
         },
       });
 
-      //  to store the data and pass it throgh middle ware
+      // to store the data and pass it throgh middle ware
       ctx.wizard.state.data = {};
 
-      //   store the adminId to the session and pass it to the next middleware
       ctx.wizard.state.adminId = adminId;
 
       return ctx.wizard.next();
     } catch (err) {
-      // reply with the error
       console.log(err);
       ctx.reply(err.message, {
         reply_markup: {
@@ -80,7 +75,18 @@ const updateStrategyThresholdScene = new Scenes.WizardScene(
         },
       });
     }
-  },
+  };
+
+  return stage;
+}
+
+// ********************************************** updateStrategyThresholdScene **********************
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+
+const updateStrategyThresholdScene = new Scenes.WizardScene(
+  "updateStrategyThresholdScene",
+  //   first stage
+  choosePairStage(),
   //   secound stage
   async (ctx) => {
     try {
@@ -111,18 +117,22 @@ const updateStrategyThresholdScene = new Scenes.WizardScene(
       ctx.wizard.state.pairId = query;
 
       // get the threshold from the collection
-      const priceStrategyData = await getPriceStrategy(
-        ctx.wizard.state.adminId,
-        ctx.wizard.state.pairId
+      const pair = await getPair(
+        ctx.wizard.state.pairId,
+        ctx.wizard.state.adminId
       );
 
-      // store the thershold to display it in the confirmation message
-      ctx.wizard.state.data.threshold = priceStrategyData.threshold;
-      // store the type of the price strategy
-      ctx.wizard.state.data.type = priceStrategyData.type;
+      if (!pair) {
+        throw new Error(`The pair doesn't exist, Please try again later...`);
+      }
 
-      const data = ctx.wizard.state.data;
-      displayData(ctx, data, `\n\nPlease enter the new threshold`);
+      ctx.wizard.state.pair = pair;
+      // store the thershold to display it in the confirmation message
+      ctx.wizard.state.data.threshold = pair.priceStrategy.threshold;
+      // store the type of the price strategy
+      ctx.wizard.state.data.type = pair.priceStrategy.type;
+
+      displayData(ctx, pair, `\n\nPlease enter the new threshold`);
 
       ctx.wizard.next();
     } catch (err) {
@@ -183,7 +193,7 @@ const updateStrategyThresholdScene = new Scenes.WizardScene(
 
       // send a confirmation message to the user to confirm the changes
       ctx.reply(
-        `Please confirm the new data:\n\nPair Id: ${ctx.wizard.state.pairId}\nThe price strategy type: ${ctx.wizard.state.data.type}\nThreshold: ${ctx.wizard.state.data.threshold}`,
+        `The Pair: ${ctx.wizard.state.pair.pair}\n\nThe engine: ${ctx.wizard.state.pair.engineName}\nThe symbol: ${ctx.wizard.state.pair.symbol}\nThe type: ${ctx.wizard.state.pair.priceStrategy.type}\nThe threshold: ${ctx.wizard.state.data.threshold}\n\nPlease confirm the new data`,
         {
           reply_markup: {
             inline_keyboard: [
@@ -247,7 +257,7 @@ const updateStrategyThresholdScene = new Scenes.WizardScene(
       );
 
       ctx.reply(
-        `The price strategy has been changed\n\nPair Id: ${ctx.wizard.state.pairId}\nThe type: ${data.type}\nThe thershold: ${data.threshold}`,
+        `The Pair: ${ctx.wizard.state.pair.pair}\n\nThe engine: ${ctx.wizard.state.pair.engineName}\nThe symbol: ${ctx.wizard.state.pair.symbol}\nThe type: ${ctx.wizard.state.pair.priceStrategy.type}\nThe threshold: ${ctx.wizard.state.data.threshold}\n\nThe price strategy has been updated.`,
         {
           reply_markup: {
             inline_keyboard: [[{ text: "Back", callback_data: "priceStr" }]],
@@ -304,72 +314,11 @@ const updateStrategyThresholdScene = new Scenes.WizardScene(
 
 const updateStrategyTypeScene = new Scenes.WizardScene(
   "updateStrategyTypeScene",
-  //   first stage
-  async (ctx) => {
-    try {
-      let query;
-
-      if (ctx.message?.text) {
-        ctx.reply(`Please choose from the above menu`);
-        await setTimeout(() => {
-          let id = ctx.update.message.message_id + 1;
-          deleteMessage(ctx, bot, id);
-        }, 1000);
-
-        // store the new data
-        return;
-      }
-
-      // check if the ctx came from the inline keyboard
-      if (ctx.update.callback_query) {
-        query = ctx.update.callback_query.data;
-        console.log(query);
-      }
-
-      if (query === "priceStr") {
-        await changeStratigyList(ctx, bot);
-        return ctx.scene.leave();
-      }
-
-      const adminId = await getAdmin(ctx);
-
-      const pairs = await getPairs(adminId);
-
-      let pairsArray = [[]];
-
-      pairs.forEach((doc) => {
-        pairsArray.push([{ text: doc.id, callback_data: doc.id }]);
-      });
-
-      pairsArray.push([{ text: "Back", callback_data: "priceStr" }]);
-
-      ctx.reply("Please Enter which pair you want to change", {
-        reply_markup: {
-          inline_keyboard: pairsArray,
-        },
-      });
-
-      //  to store the data and pass it throgh middle ware
-      ctx.wizard.state.data = {};
-
-      //   store the adminId to the session and pass it to the next middleware
-      ctx.wizard.state.adminId = adminId;
-
-      return ctx.wizard.next();
-    } catch (err) {
-      // reply with the error
-      console.log(err);
-      ctx.reply(err.message, {
-        reply_markup: {
-          inline_keyboard: [[{ text: "Back", callback_data: "priceStr" }]],
-        },
-      });
-    }
-  },
+  choosePairStage(),
   //   secound stage
   async (ctx) => {
     try {
-      let amount, query;
+      let query;
 
       // Only inlineKeyboard is working others must doesn't works
       if (ctx.message?.text) {
@@ -396,20 +345,24 @@ const updateStrategyTypeScene = new Scenes.WizardScene(
       ctx.wizard.state.pairId = query;
 
       // get the threshold from the collection
-      const priceStrategyData = await getPriceStrategy(
-        ctx.wizard.state.adminId,
-        ctx.wizard.state.pairId
+      const pair = await getPair(
+        ctx.wizard.state.pairId,
+        ctx.wizard.state.adminId
       );
 
-      // store the thershold to display it in the confirmation message
-      ctx.wizard.state.data.threshold = priceStrategyData.threshold;
-      // store the type of the price strategy
-      ctx.wizard.state.data.type = priceStrategyData.type;
+      if (!pair) {
+        throw new Error(`The pair doesn't exist, Please try again later...`);
+      }
 
-      const data = ctx.wizard.state.data;
+      ctx.wizard.state.pair = pair;
+
+      // store the thershold to display it in the confirmation message
+      ctx.wizard.state.data.threshold = pair.priceStrategy.threshold;
+      // store the type of the price strategy
+      ctx.wizard.state.data.type = pair.priceStrategy.type;
 
       ctx.reply(
-        `The Pair Id: ${ctx.wizard.state.pairId}\nThe type: ${data.type}\nThe threshold: ${data.threshold}\n\nPlease enter the new price strategy type`,
+        `The Pair: ${pair.pair}\n\nThe engine: ${pair.engineName}\nThe symbol: ${pair.symbol}\nThe type: ${pair.priceStrategy.type}\nThe threshold: ${pair.priceStrategy.threshold}\n\nPlease enter the new price strategy type`,
         {
           reply_markup: {
             inline_keyboard: [
@@ -470,12 +423,9 @@ const updateStrategyTypeScene = new Scenes.WizardScene(
       // The query will include the three values (Random, Up, Down)
       ctx.wizard.state.data.type = query;
 
-      // the stored data in the session will be stored in the data const
-      const data = ctx.wizard.state.data;
-
       // send a confirmation message to the user to confirm the changes
       ctx.reply(
-        `Please confirm the new data:\n\nPair Id: ${ctx.wizard.state.pairId}\nThe price strategy type: ${data.type}\nThreshold: ${ctx.wizard.state.data.threshold}`,
+        `The Pair: ${ctx.wizard.state.pair.pair}\n\nThe engine: ${ctx.wizard.state.pair.engineName}\nThe symbol: ${ctx.wizard.state.pair.symbol}\nThe type: ${ctx.wizard.state.data.type}\nThe threshold: ${ctx.wizard.state.data.threshold}\n\nPlease confirm the new data`,
         {
           reply_markup: {
             inline_keyboard: [
@@ -539,7 +489,7 @@ const updateStrategyTypeScene = new Scenes.WizardScene(
       );
 
       ctx.reply(
-        `The price strategy has been changed\n\nPair Id: ${ctx.wizard.state.pairId}\nThe type: ${data.type}\nThe thershold: ${data.threshold}`,
+        `The Pair: ${ctx.wizard.state.pair.pair}\n\nThe engine: ${ctx.wizard.state.pair.engineName}\nThe symbol: ${ctx.wizard.state.pair.symbol}\nThe type: ${ctx.wizard.state.data.type}\nThe threshold: ${ctx.wizard.state.data.threshold}\n\nThe price strategy has been changed`,
         {
           reply_markup: {
             inline_keyboard: [[{ text: "Back", callback_data: "priceStr" }]],
@@ -597,66 +547,7 @@ const updateStrategyTypeScene = new Scenes.WizardScene(
 const getPriceStrategyScene = new Scenes.WizardScene(
   "getPriceStrategyScene",
   // first stage
-  async (ctx) => {
-    console.log("the price strategy pairs");
-    try {
-      let query;
-
-      if (ctx.message?.text) {
-        ctx.reply(`Please choose from the above menu`);
-        await setTimeout(() => {
-          let id = ctx.update.message.message_id + 1;
-          deleteMessage(ctx, bot, id);
-        }, 1000);
-
-        // store the new data
-        return;
-      }
-
-      // check if the ctx came from the inline keyboard
-      if (ctx.update.callback_query) {
-        query = ctx.update.callback_query.data;
-        console.log(query);
-      }
-
-      if (query === "priceStr") {
-        await priceStratigyList(ctx, bot);
-        return ctx.scene.leave();
-      }
-
-      const adminId = await getAdmin(ctx);
-
-      const pairs = await getPairs(adminId);
-
-      let pairsArray = [[]];
-
-      pairs.forEach((doc) => {
-        pairsArray.push([{ text: doc.id, callback_data: doc.id }]);
-      });
-
-      pairsArray.push([{ text: "Back", callback_data: "priceStr" }]);
-
-      ctx.reply("Select the pair to get the strategy price", {
-        reply_markup: {
-          inline_keyboard: pairsArray,
-        },
-      });
-
-      // to store the data and pass it throgh middle ware
-      ctx.wizard.state.data = {};
-
-      ctx.wizard.state.adminId = adminId;
-
-      return ctx.wizard.next();
-    } catch (err) {
-      console.log(err);
-      ctx.reply(err.message, {
-        reply_markup: {
-          inline_keyboard: [[{ text: "Back", callback_data: "priceStr" }]],
-        },
-      });
-    }
-  },
+  choosePairStage(),
   //   secound stage
   async (ctx) => {
     let query;
@@ -685,14 +576,19 @@ const getPriceStrategyScene = new Scenes.WizardScene(
 
       ctx.wizard.state.pairId = query;
 
-      const priceStrategy = await getPriceStrategy(
-        ctx.wizard.state.adminId,
-        ctx.wizard.state.pairId
+      console.log(ctx.wizard.state.pairId);
+      const pair = await getPair(
+        ctx.wizard.state.pairId,
+        ctx.wizard.state.adminId
       );
 
-      let msg = `The price strategy for the pair ${ctx.wizard.state.pairId}`;
+      if (!pair) {
+        throw new Error(`The pair doesn't exist, Please try again later...`);
+      }
 
-      msg += `\n\nThe Price strategy: ${priceStrategy.type}\nThe Threshold: ${priceStrategy.threshold}`;
+      let msg = `The price strategy for the pair ${pair.pair}`;
+
+      msg += `\n\nThe engine: ${pair.engineName}\nThe symbol: ${pair.symbol}\nThe price strategy: ${pair.priceStrategy.type}\nThe threshold: ${pair.priceStrategy.threshold}`;
 
       ctx.reply(msg, {
         reply_markup: {
@@ -745,9 +641,10 @@ const getPriceStrategyScene = new Scenes.WizardScene(
 // displays messages
 const displayData = async (ctx, data, msg) => {
   // display the data and ask for the new data
+  console.log(data);
   await ctx.reply(
     `
-  The Pair Id: ${ctx.wizard.state.pairId}\nThe type: ${data.type}\nThe threshold: ${data.threshold}${msg}`,
+    Pair: ${data.pair}\n\nThe engine: ${data.engineName}\nThe symbol: ${data.symbol}\nThe price strategy: ${data.priceStrategy.type}\nThe threshold: ${data.priceStrategy.threshold}${msg}`,
     {
       reply_markup: {
         inline_keyboard: [[{ text: "Back", callback_data: "priceStr" }]],
