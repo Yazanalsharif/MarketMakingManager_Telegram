@@ -10,7 +10,7 @@ const { errorHandler } = require("./utils/errorHandler");
 const server = () => {
   const app = express();
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 2000;
 
   if (process.env.NODE_ENV === "development") {
     app.use(morgan("dev"));

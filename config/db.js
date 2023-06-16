@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const chalk = require("chalk");
 const firebase = require("firebase-admin");
-const serviceAccount = require("./test-app-config.json");
+const serviceAccount = require("./config.json");
 
 // const connecteDB = async () => {
 //   // to avoid a depractionWarning

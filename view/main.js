@@ -10,7 +10,7 @@ const inline_keyboard = [
     { text: "Status", callback_data: "statusReport" },
     { text: "Pairs", callback_data: "pairList" },
   ],
-  [{ text: "Price Stratigy", callback_data: "priceStrategy" }],
+  [{ text: "Price Strategy", callback_data: "priceStrategy" }],
   [
     { text: "Cancelation Timeout", callback_data: "cancelation" },
     { text: "Orders Gap", callback_data: "ordersGap" },

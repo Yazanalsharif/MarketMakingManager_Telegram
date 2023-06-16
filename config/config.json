@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "marketmakingbot",
+  "private_key_id": "6574bc14a78d0439dabb272da3c925e2d59fae11",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCxqhwm9XvEAXNG\nmQ4RvtXwx8lyH27Iq52cR+enpJowlEKRb+AuKQnYARLkO9uWOQALl3VqEMjYqRFn\niI9hxBgAF92pMqee9N89NFNCtvsEEZkg6k2NX2FbhzITj3rh770nh7gbBKyjHSjz\nf/5VSdufIcghbDVtOSe3LiQWi///pFAk6dE9o8266Qvj6U9kpo1Eh/bwVupAwu8E\nhSvbid+bz5lRmA2SvWblkmlz9HD8qqU+Kg/6fZRtwpgLycismg3AvrWPOj3ODjNP\nMr0As/fMBc8vCnKRliB5+4Cxhv0eshDbjOSp4VvcKezA8busm2gedVw4W1+QLaxe\nHqWkzJVXAgMBAAECggEAAX1ZJhR52K9gbY+b+BcfCRlLvZq43ZLey/AoZ5XwOwcL\nNdf3y7tJW1fK9kHwOea5ct9uuxhv7q0gObuB5EJ2Jw4MLD6B/Em2U3eMWStamHKj\nU4zTYKOTl+Zey54w3BMcBWhUaVmVLvrwHHaOxd1MK53nZSxYmFVZ2WXYJJ5A475T\n38Yp8O++sk0c0U2aG4g7IajT1JRVKbUrufvjO7h0Zh7hroJn82D+o8PhWrKj4e1P\nYu19wfE4B47afxpB+qFb2EcnNvrfkIO594LIvaYGlc2CVo2S0hG/QtWzZm4AV/9Q\njycOtoM0cqztkZAosV+YuIEje875azpsUXCMpuZJtQKBgQDbin4OLL1zmwk6FwRV\ndl3XlZIdiEWgu8QwjT8se/DJ49+JOcPfksrZ6+fHZZIP6svQAsgVug9oclUhC457\nJxKaITE8pRQJDGY3fc6Bdky40vAZRNbAFgklGpOIny3P1d4GdP4rsXoU9kHxRLG/\n16bZnCyVF9TisODYYsX9T/KxnQKBgQDPK0qVmJ3YlsMc2JQwJKJQo5DCJ+7up4wr\nLSVI7oj01sm4U2ub0HQOXklxGkRK6MiOxgnXG96xywfgxpPIGYVd5W9tNKYRooot\nFygEXY4Jtbizyhj31Pe/PHuoz8YQojP8NOMb79KuJVLJo/n7lXYG5C8o/HB8T+Ie\n0bZBoQzagwKBgQDZAVAQmtC5UOoR7WZvQ40G5+WCI40PkAohI7zqL6iXJxNyBRNE\nD0lLlw+H3TI/YYsMlXNJZpyMVVcoTtALk1ej2mNc2p+vQf5Xo5dYCKNVncuObqkH\nPcDUWCy0wwL5iSDpqQMEFW3jAne0EH7SbkuSlfjLdr8LRGM8AIZMGZZ/UQKBgC/C\nBxudZyX6+1e3BdJjX5e/XSulEQurTEDX03SQqLnomfAIKxJsZ5S4X63XJE8wgquH\nM9WG8zuBVnuWy5Khb4FJ1voR3QbLtZbXc74t4wSSA9ZOjJr1WXeYddlgrIRBIELP\n3lseWi8TI5agWoyI1ACasdR8/WFq+PGp3p4ahmAJAoGAAWkt1JRBxCotyRuVm9Wp\nUZs+7k8pGZuklysGG9Pgz9/u6datjBf/25jcf81gITbLW9F21+UBD2sJ9K3hut/N\n0bP0rdF6lY0RVXWjdwCAP+bjL3Ly+NhQhS2e2HpCCMd8bLEvBtimDK7CAQKvdjZq\nmZOPYbvFj45EXiz9N83BYb4=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-dxnot@marketmakingbot.iam.gserviceaccount.com",
+  "client_id": "114473892013136228256",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-dxnot%40marketmakingbot.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
