@@ -37,7 +37,7 @@ const { menuConfig } = require("../controllers/marketMakerController");
 bot.action("sign-in", async (ctx) => {
   try {
     // await signOut(ctx);
-    ctx.scene.enter("signin");
+    await ctx.scene.enter("signin");
   } catch (err) {
     console.log(err.message);
   }

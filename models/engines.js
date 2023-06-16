@@ -25,4 +25,18 @@ async function getEngines() {
   }
 }
 
-module.exports = { getEngines, ENGINES };
+async function getEngineData(engineDoc) {
+  try {
+    let engine;
+
+    const engineCollection = db.collection("engines").doc(engineDoc);
+
+    engine = await engineCollection.get();
+
+    return engine.data();
+  } finally {
+    // console.log("The function has been executed in the Pairs Module");
+  }
+}
+
+module.exports = { getEngines, getEngineData, ENGINES };

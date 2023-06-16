@@ -1,1 +1,11 @@
 API NAME, API passphrase, api key, api secret: bf99264e-decb-4de8-b036-1ce115a85c02
+
+
+
+// api Key length 20 - 50
+// 64883a5d6152270001914618
+// 647da58300526100012e25d0
+// 648839e7118c4d000159fe17
+// secret key  36 - 50
+// cd85000d-1924-46dc-87e8-269f789f8126
+// 56edbf3c-8a8d-4803-8de2-d9d8903903dd

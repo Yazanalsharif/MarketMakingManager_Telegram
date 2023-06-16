@@ -4,38 +4,10 @@ const bot = require("./bot");
 const server = require("./server");
 const chalk = require("chalk");
 
-const { isAuthorized, isNotAuthorized } = require("./middlewares/authorized");
-const { mainMenu, signInView } = require("./view/main");
+const { isNotAuthorized } = require("./middlewares/authorized");
+const { signInView } = require("./view/main");
 const { menuConfig } = require("./controllers/marketMakerController");
 // Yaz54321&&
-
-// const {
-//   addUser,
-//   deleteUser,
-//   addChatId,
-//   getUsers,
-//   updateUserName,
-// } = require("./controllers/users");
-
-// const {
-//   updateAmountLimit,
-//   updateTransactionRateLimit,
-//   getBalances,
-//   updateUserAccount,
-//   updateEngines,
-//   limitOrder,
-// } = require("./controllers/botConfig");
-// const {
-//   limitOrderList,
-//   configBotList,
-//   activityReportList,
-//   statusReportList,
-// } = require("./view/marketMaker");
-
-const {
-  amountOrderScene,
-  precentOrderScene,
-} = require("./scenes/amountLimitScenes");
 
 const deleteMessage = require("./utils/deleteMessage");
 
@@ -48,24 +20,24 @@ const {
 const { updateStatusScene, getStatusScene } = require("./scenes/statusScenes");
 
 const {
+  addingPairScene,
   getPriceStrategyScene,
   updateStrategyTypeScene,
   updateStrategyThresholdScene,
-} = require("./scenes/priceStrategyScenes");
-
-const {
+  amountOrderScene,
+  precentOrderScene,
   orderCancelationScene,
   orderGapScene,
 } = require("./scenes/pairsScenes");
 
-const { signin } = require("./scenes/usersScences");
-// const { mainMenu } = require("./view/main");
+const {
+  addTradingAccount,
+  deleteTradingAccount,
+} = require("./scenes/tradingAccountScenes");
 
-// const { errorHandlerBot } = require("./utils/errorHandler");
+const { signin } = require("./scenes/usersScences");
 
 server();
-
-// const bot = new Telegraf(process.env.BOT_KEY, { polling: true });
 
 const launchBot = async () => {
   try {
@@ -95,6 +67,9 @@ let stage = new Scenes.Stage([
   orderCancelationScene,
   orderGapScene,
   signin,
+  addingPairScene,
+  addTradingAccount,
+  deleteTradingAccount,
 ]);
 
 bot.use(async (ctx, next) => {
@@ -106,25 +81,26 @@ bot.use(async (ctx, next) => {
   }
 });
 
-bot.use(async (ctx, next) => {
-  try {
-    deleteMessage(ctx, bot);
-    next();
-  } catch (err) {
-    console.log(err);
-  }
-});
+// bot.use(async (ctx, next) => {
+//   try {
+//     deleteMessage(ctx, bot);
+//     next();
+//   } catch (err) {
+//     console.log(err);
+//   }
+// });
 
-stage.command("menu", async (ctx) => {
-  try {
-    await menuConfig(ctx, bot);
-  } catch (err) {
-    console.log(`Error: ${err.message}`);
-  }
-});
+// stage.command("menu", async (ctx) => {
+//   try {
+//     await menuConfig(ctx, bot);
+//   } catch (err) {
+//     console.log(`Error: ${err.message}`);
+//   }
+// });
 
 stage.start(async (ctx) => {
   try {
+    ctx.scene.leave();
     const auth = await isNotAuthorized(ctx);
 
     if (auth !== 0) {

@@ -172,17 +172,22 @@ const updateUserName = async (ctx) => {
 // @Description             sign the user in to the telegram configuration
 // access                   Public
 const signInUser = async (email, password) => {
-  const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.API_KEY_FIREBASE}`;
-  console.log("the user", email);
-  console.log("the password", password);
-  const res = await axios.post(url, {
-    email: email,
-    password: password,
-    returnSecureToken: true,
-  });
-  console.log("Here");
+  try {
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.API_KEY_FIREBASE}`;
+    console.log("the user", email);
+    console.log("the password", password);
+    const res = await axios.post(url, {
+      email: email,
+      password: password,
+      returnSecureToken: true,
+    });
 
-  return res.data;
+    console.log("sign in user", res?.data);
+    return res?.data;
+  } catch (err) {
+    console.log(err.axiosError);
+    return undefined;
+  }
 };
 
 module.exports = {

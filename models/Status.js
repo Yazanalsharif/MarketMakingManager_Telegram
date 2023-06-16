@@ -51,7 +51,8 @@ const getStatusesData = async (adminId, pairId) => {
 
 const updateStatus = async (data, adminId, pairId) => {
   try {
-    let statusId;
+    let statusId = undefined;
+    let updateStatus;
     const pairCollection = db
       .collection("admins")
       .doc(adminId)
@@ -66,10 +67,15 @@ const updateStatus = async (data, adminId, pairId) => {
       statusId = doc.id;
     });
 
-    // update the status with a specific data that came from the user
-    const updateSnapshot = await statusCollection.doc(statusId).update(data);
+    // if there are no status  create one
+    if (!statusId) {
+      updateStatus = await statusCollection.doc().set(data);
+    } else {
+      // if the status exist
+      updateStatus = await statusCollection.doc(statusId).update(data);
+    }
 
-    return updateSnapshot;
+    return updateStatus;
   } finally {
     console.log(`The update status function`);
   }

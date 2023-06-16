@@ -7,12 +7,8 @@ const deleteMessage = require("../utils/deleteMessage");
 const { MODELS } = require("../models/models");
 
 const {
-  updateAmountLimit,
-  updateTransactionRateLimit,
-  getBalances,
-  updateUserAccount,
-  updateEngines,
   getPairData,
+  getAccountsData,
 } = require("../controllers/marketMakerController");
 
 const {
@@ -20,8 +16,9 @@ const {
   activityReportList,
   statusReportList,
   pairsList,
-  priceStratigyList,
-  changeStratigyList,
+  priceStrategyList,
+  changeStrategyList,
+  tradingAccountList,
 } = require("../view/marketMaker");
 const { models } = require("mongoose");
 
@@ -40,47 +37,6 @@ bot.use(async (ctx, next) => {
     }, 1000);
   }
 });
-
-// bot.command("amount_limit", async (ctx) => {
-//   try {
-//     await updateAmountLimit(ctx);
-//   } catch (err) {
-//     console.log(err);
-//   }
-// });
-
-// bot.command("transaction_rate_limit", async (ctx) => {
-//   try {
-//     await updateTransactionRateLimit(ctx);
-//   } catch (err) {
-//     console.log(err);
-//   }
-// });
-
-// bot.command("Getbalances", async (ctx) => {
-//   try {
-//     await getBalances(ctx);
-//   } catch (err) {
-//     console.log(err);
-//   }
-// });
-
-// bot.command("users", async (ctx) => {
-//   try {
-//     await updateUserAccount(ctx);
-//   } catch (err) {
-//     console.log(err);
-//   }
-// });
-
-// bot.command("engines", async (ctx) => {
-//   try {
-//     console.log(url);
-//     await updateEngines(ctx);
-//   } catch (err) {
-//     console.log(err);
-//   }
-// });
 
 // ********************************* The inline Keyboards Actions *************************************
 bot.action("backMain", async (ctx) => {
@@ -105,11 +61,15 @@ bot.action("configlist", async (ctx) => {
     errorHandlerBot(ctx, err);
   }
 });
-// try {
 
-// } catch (err) {
+bot.action("tradingAccountList", async (ctx) => {
+  try {
+    await tradingAccountList(ctx, bot);
+  } catch (err) {
+    errorHandlerBot(ctx, err);
+  }
+});
 
-// }
 bot.action("amount", async (ctx) => {
   try {
     await ctx.scene.enter("amountOrderScene");
@@ -117,6 +77,41 @@ bot.action("amount", async (ctx) => {
     console.log(err);
   }
 });
+
+// trading account here
+bot.action("tradingAccountList", async (ctx) => {
+  try {
+    await tradingAccountList(ctx, bot);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+bot.action("addTradingAccount", async (ctx) => {
+  try {
+    await ctx.scene.enter("addTradingAccount");
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+bot.action("deleteTradingAccount", async (ctx) => {
+  try {
+    await ctx.scene.enter("deleteTradingAccount");
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+bot.action("getTradingAccount", async (ctx) => {
+  try {
+    await getAccountsData(ctx);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+// actions related to the trading account
 
 bot.action("precent", async (ctx) => {
   try {
@@ -159,7 +154,6 @@ bot.action("deleteActivityReport", async (ctx) => {
 });
 
 // add the other scenes related to the activities report
-
 bot.action("statusReport", async (ctx) => {
   try {
     await statusReportList(ctx, bot);
@@ -187,116 +181,175 @@ bot.action("updateStatus", async (ctx) => {
 // ******************************************** Help Actions MarketMaker
 
 bot.action("mainMenuHelp", async (ctx) => {
+  let mainHelp;
   try {
     const buySellDiff = MODELS.pairs.buySellDiff;
     const orderTimeout = MODELS.pairs.orderTimeout;
+    const mainHelp = `Market Maker Manager\n\nThe telegram bot is one of the market maker features which you will be able to manage the market maker through it\n\n${orderTimeout.name}: ${orderTimeout.description}\n\n${buySellDiff.name}: ${buySellDiff.description}\n\nEach menu will has a help button, Please try to read it before interacting with the options`;
+    await ctx.editMessageText(mainHelp, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Back", callback_data: "backMain" }]],
+      },
+    });
+  } catch (err) {
+    console.log(err.message);
+    await bot.telegram.sendMessage(ctx.chat.id, mainHelp, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Back", callback_data: "backMain" }]],
+      },
+    });
+  }
+});
 
-    ctx.reply(
-      `Market Maker Manager\n\nThe telegram bot is one of the market maker features which you will be able to manage the market maker through it\n\n${orderTimeout.name}: ${orderTimeout.description}\n\n${buySellDiff.name}: ${buySellDiff.description}\n\nEach menu will has a help button, Please try to read it before interacting with the options`,
-      {
-        reply_markup: {
-          inline_keyboard: [[{ text: "Back", callback_data: "backMain" }]],
-        },
-      }
-    );
+bot.action("helpTradingAccount", async (ctx) => {
+  let tradingAccountHelp;
+  try {
+    tradingAccountHelp = `Trading accounts is the accounts that the engine will use to trade a specifc pair.\n\nYou can create the trading account through the exchanges that available to user through the Market Maker.\n\n You can check the exchange docs to figure out how you can create an api accounts. For example if the pair exist in kucoin then you can read the kucoin docs to create the api account to insert it here`;
+    await ctx.editMessageText(tradingAccountHelp, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "Back", callback_data: "backTradingAccountList" }],
+        ],
+      },
+    });
   } catch (err) {
     console.log(err);
+    await bot.telegram.sendMessage(ctx.chat.id, activityReport, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "Back", callback_data: "backTradingAccountList" }],
+        ],
+      },
+    });
   }
 });
 
 bot.action("helpActivityList", async (ctx) => {
+  let activityReport;
   try {
-    ctx.reply(
-      `Pairs activity report:\n\nYou can setup a config to receive reports from the engine at specific time in different periods(daily, monthly), The report will include the whole transactions that made by the engine.\n\nThe time format must be 00:00, otherwise you will not able to add the time`,
-      {
-        reply_markup: {
-          inline_keyboard: [[{ text: "Back", callback_data: "backReport" }]],
-        },
-      }
-    );
+    activityReport = `Pairs activity report:\n\nYou can setup a config to receive reports from the engine at specific time in different periods(daily, monthly), The report will include the whole transactions that made by the engine.\n\nThe time format must be 00:00, otherwise you will not able to add the time`;
+    await ctx.editMessageText(activityReport, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Back", callback_data: "backReport" }]],
+      },
+    });
   } catch (err) {
     console.log(err);
+    await bot.telegram.sendMessage(ctx.chat.id, activityReport, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Back", callback_data: "backReport" }]],
+      },
+    });
   }
 });
 
 bot.action("helpStatusList", async (ctx) => {
+  let statusHelp;
   try {
-    ctx.reply(
-      `Status Pairs:\n\nWe can check the pair status, the pair is working fine if the status is (working) and stopped if the status (stopped).\n\nYou can change the status of the pair, the reason will be (Manually)\n\nIf the status changed by the Engine the reason will be attached.`,
-      {
-        reply_markup: {
-          inline_keyboard: [[{ text: "Back", callback_data: "backStatus" }]],
-        },
-      }
-    );
+    statusHelp = `Status Pairs:\n\nWe can check the pair status, the pair is working fine if the status is (working) and stopped if the status (stopped).\n\nYou can change the status of the pair, the reason will be (Manually)\n\nIf the status changed by the Engine the reason will be attached.`;
+    await ctx.editMessageText(statusHelp, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Back", callback_data: "backStatus" }]],
+      },
+    });
   } catch (err) {
     console.log(err);
+    await bot.telegram.sendMessage(ctx.chat.id, statusHelp, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Back", callback_data: "backStatus" }]],
+      },
+    });
   }
 });
 
 bot.action("helpLimitList", async (ctx) => {
+  let helpLimit;
   try {
     // console.log(MODELS.pairs.limit.description);
     const limitHelp = MODELS.pairs.limit.description;
     const thresholdHelp = MODELS.pairs.threshold.description;
-    ctx.reply(`${limitHelp}\n\n${thresholdHelp}`, {
+    helpLimit = `${limitHelp}\n\n${thresholdHelp}`;
+    await ctx.editMessageText(helpLimit, {
       reply_markup: {
         inline_keyboard: [[{ text: "Back", callback_data: "backLimit" }]],
       },
     });
   } catch (err) {
     console.log(err);
+    await bot.telegram.sendMessage(ctx.chat.id, helpLimit, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Back", callback_data: "backLimit" }]],
+      },
+    });
   }
 });
 
 bot.action("helpPairs", async (ctx) => {
+  let pairHelp;
   try {
     const pairs = MODELS.pairs;
-    let pairHelp = `Pair List\n\nYou will be able to get the list of the pairs you have with their report configurations and statuses\n\nPairs properties:\n\n${pairs.base.name}: ${pairs.base.description}\n\n${pairs.quote.name}: ${pairs.quote.description}\n\n${pairs.limit.name}: ${pairs.limit.description}\n\n${pairs.threshold.name}: ${pairs.threshold.description}\n\n${pairs.engine.name}: ${pairs.engine.description}`;
+    pairHelp = `Pair List\n\nYou will be able to get the list of the pairs you have with their report configurations and statuses\n\nPairs properties:\n\n${pairs.base.name}: ${pairs.base.description}\n\n${pairs.quote.name}: ${pairs.quote.description}\n\n${pairs.limit.name}: ${pairs.limit.description}\n\n${pairs.threshold.name}: ${pairs.threshold.description}\n\n${pairs.engine.name}: ${pairs.engine.description}`;
 
-    ctx.reply(pairHelp, {
+    await ctx.editMessageText(pairHelp, {
       reply_markup: {
         inline_keyboard: [[{ text: "Back", callback_data: "backPair" }]],
       },
     });
   } catch (err) {
     console.log(err);
+    await bot.telegram.sendMessage(ctx.chat.id, pairHelp, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Back", callback_data: "backPair" }]],
+      },
+    });
   }
 });
 
 bot.action("helpPriceStrategy", async (ctx) => {
+  let priceStrategy;
   try {
     const typeHelp = MODELS.pairs.priceStrategyType.description;
     const thresholdHelp = MODELS.pairs.priceStrategyThreshold.description;
-    ctx.reply(
-      `Price Strategy Help\n\n\nPrice strategy type: ${typeHelp}\n\n\n${thresholdHelp}`,
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "Back", callback_data: "backPriceStrategy" }],
-          ],
-        },
-      }
-    );
+    priceStrategy = `Price Strategy Help\n\n\nPrice strategy type: ${typeHelp}\n\n\n${thresholdHelp}`;
+    await ctx.editMessageText(priceStrategy, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "Back", callback_data: "backPriceStrategy" }],
+        ],
+      },
+    });
   } catch (err) {
     console.log(err);
+    await bot.telegram.sendMessage(ctx.chat.id, priceStrategy, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "Back", callback_data: "backPriceStrategy" }],
+        ],
+      },
+    });
   }
 });
 
 bot.action("helpStrategyChange", async (ctx) => {
+  let helpStrategyChange;
   try {
-    ctx.reply(
-      `Price strategy type is a direction type, it must be one of the values (Up, Down, Random)\n\nPrice strategy threshold is a precentage, it must be between 0 and 100`,
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "Back", callback_data: "backChangeStrategy" }],
-          ],
-        },
-      }
-    );
+    helpStrategyChange = `Price strategy type is a direction type, it must be one of the values (Up, Down, Random)\n\nPrice strategy threshold is a precentage, it must be between 0 and 100`;
+    await ctx.editMessageText(helpStrategyChange, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "Back", callback_data: "backChangeStrategy" }],
+        ],
+      },
+    });
   } catch (err) {
     console.log(err);
+    await bot.telegram.sendMessage(ctx.chat.id, helpStrategyChange, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "Back", callback_data: "backChangeStrategy" }],
+        ],
+      },
+    });
   }
 });
 
@@ -304,6 +357,14 @@ bot.action("helpStrategyChange", async (ctx) => {
 bot.action("pairList", async (ctx) => {
   try {
     await pairsList(ctx, bot);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+bot.action("addNewPair", async (ctx) => {
+  try {
+    await ctx.scene.enter("addingPairScene");
   } catch (err) {
     console.log(err);
   }
@@ -323,7 +384,7 @@ bot.action("getPairs", async (ctx) => {
 bot.action("priceStrategy", async (ctx) => {
   try {
     // get the list of the available operations related with the price strategy
-    await priceStratigyList(ctx, bot);
+    await priceStrategyList(ctx, bot);
   } catch (err) {
     console.log(err);
   }
@@ -339,7 +400,7 @@ bot.action("getPriceStrategies", async (ctx) => {
 
 bot.action("changePriceStrategies", async (ctx) => {
   try {
-    await changeStratigyList(ctx, bot);
+    await changeStrategyList(ctx, bot);
   } catch (err) {
     console.log(err);
   }
@@ -406,6 +467,14 @@ bot.action("backStatus", async (ctx) => {
   }
 });
 
+bot.action("backTradingAccountList", async (ctx) => {
+  try {
+    await tradingAccountList(ctx, bot);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
 bot.action("backReport", async (ctx) => {
   try {
     await activityReportList(ctx, bot);
@@ -424,7 +493,7 @@ bot.action("backPair", async (ctx) => {
 
 bot.action("backPriceStrategy", async (ctx) => {
   try {
-    await priceStratigyList(ctx, bot);
+    await priceStrategyList(ctx, bot);
   } catch (err) {
     console.log(err);
   }
@@ -432,7 +501,7 @@ bot.action("backPriceStrategy", async (ctx) => {
 
 bot.action("backChangeStrategy", async (ctx) => {
   try {
-    await changeStratigyList(ctx, bot);
+    await changeStrategyList(ctx, bot);
   } catch (err) {
     console.log(err);
   }
