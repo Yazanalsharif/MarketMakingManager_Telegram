@@ -3,4 +3,4 @@ config/.env
 config/test-app-config.json
 mmss
 testFirbase.json
-config.json
+config/config.json
