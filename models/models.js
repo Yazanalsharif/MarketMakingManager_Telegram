@@ -295,7 +295,7 @@ let MODELS = {
       shouldAsk: true,
       description:
         "You have to choose one of your report to complete your operation",
-      title: "Please choose from one of the below reports",
+      title: "Please choose from one of the below options",
     },
     display: {
       name: "Dispaly",

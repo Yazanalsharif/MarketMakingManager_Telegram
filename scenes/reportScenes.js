@@ -30,6 +30,7 @@ const createReportScene = new Scenes.WizardScene(
 const getReportScene = new Scenes.WizardScene(
   "getReportScene",
   selectPairStep("reportList"),
+  selectReport(),
   displayInformationsStep("reportConfig")
 );
 

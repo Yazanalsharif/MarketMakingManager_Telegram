@@ -7,7 +7,6 @@ const chalk = require("chalk");
 const { isNotAuthorized } = require("./middlewares/authorized");
 const { signInView } = require("./view/main");
 const { menuConfig } = require("./controllers/marketMakerController");
-// Yaz54321&&
 
 const deleteMessage = require("./utils/deleteMessage");
 

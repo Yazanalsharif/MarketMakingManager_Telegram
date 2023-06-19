@@ -18,6 +18,12 @@ const inline_keyboard = [
   [{ text: "Help", callback_data: "mainMenuHelp" }],
 ];
 
+const signInTitle = `Please click sign in to `;
+const signInInlineKeyboard = [
+  [{ text: "Sign in", callback_data: "sign-in" }],
+  [{ text: "Help", callback_data: "signInHelp" }],
+];
+
 const mainMenu = async (ctx, bot) => {
   try {
     await ctx.editMessageText(mainMenuText, {
@@ -26,6 +32,7 @@ const mainMenu = async (ctx, bot) => {
       },
     });
   } catch (err) {
+    console.log(err);
     await bot.telegram.sendMessage(ctx.chat.id, mainMenuText, {
       reply_markup: {
         inline_keyboard: inline_keyboard,
@@ -33,12 +40,29 @@ const mainMenu = async (ctx, bot) => {
     });
   }
 };
-
-const signInTitle = `Please click sign in to `;
-const signInInlineKeyboard = [
-  [{ text: "Sign in", callback_data: "sign-in" }],
-  [{ text: "Help", callback_data: "signInHelp" }],
-];
+const mainMenuEditable = async (ctx, bot) => {
+  try {
+    await ctx.telegram.editMessageText(
+      ctx.chat.id,
+      ctx.wizard.state.messageToEdit,
+      0,
+      {
+        text: mainMenuText,
+        inline_message_id: ctx.wizard.state.messageToEdit,
+        reply_markup: {
+          inline_keyboard: inline_keyboard,
+        },
+      }
+    );
+  } catch (err) {
+    console.log(err);
+    await bot.telegram.sendMessage(ctx.chat.id, mainMenuText, {
+      reply_markup: {
+        inline_keyboard: inline_keyboard,
+      },
+    });
+  }
+};
 const signInView = async (ctx, bot) => {
   try {
     await ctx.editMessageText(signInTitle, {
@@ -55,4 +79,4 @@ const signInView = async (ctx, bot) => {
   }
 };
 
-module.exports = { mainMenu, signInView };
+module.exports = { mainMenu, signInView, mainMenuEditable };

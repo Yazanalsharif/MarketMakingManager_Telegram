@@ -5,7 +5,7 @@ const { firebase } = require("../../config/db");
 const { MODELS } = require("../../models/models");
 
 // views
-const { mainMenu, signInView } = require("../../view/main");
+const { mainMenu, signInView, mainMenuEditable } = require("../../view/main");
 
 //utils
 const deleteMessage = require("../../utils/deleteMessage");
@@ -175,6 +175,8 @@ function passwordStep() {
 
       if (ctx.message) {
         if (ctx.message.text && !ctx.wizard.state.firstEntry) {
+          let id = ctx.update.message.message_id;
+          await deleteMessage(ctx, bot, id);
           // we suppose ctx.message.text to be password
           user = await signInUser(
             ctx.wizard.state.data.email,
@@ -182,8 +184,8 @@ function passwordStep() {
           );
 
           if (user) {
-            let id = ctx.update.message.message_id;
-            await deleteMessage(ctx, bot, id);
+            // let id = ctx.update.message.message_id;
+            // await deleteMessage(ctx, bot, id);
 
             // Enter the data to the database
             const data = {
@@ -196,13 +198,15 @@ function passwordStep() {
 
             console.log(data);
 
-            await updateAdmin(data);
+            // await updateAdmin(data);
 
-            await mainMenu(ctx, bot);
+            // here is throwing error the message won't be edited
+            // mainMenu doesn't edit the message
+            await mainMenuEditable(ctx, bot);
             return ctx.scene.leave();
           } else {
-            let id = ctx.update.message.message_id;
-            await deleteMessage(ctx, bot, id);
+            // let id = ctx.update.message.message_id;
+            // await deleteMessage(ctx, bot, id);
             ctx.wizard.state.message = MODELS.user.password.warning + "\n\n";
             console.log(ctx.wizard.state.message);
           }

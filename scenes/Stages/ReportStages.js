@@ -81,7 +81,7 @@ function selectReport() {
         ctx.wizard.state.pairId
       );
 
-      if (!reports || reports.length === 0) {
+      if (!reports || reports?.length === 0) {
         ctx.wizard.state.message = `There are no reports belongs to the chosen pair\n\n`;
       }
 
@@ -879,6 +879,7 @@ function telegramStep() {
   return step;
 }
 
+// Confirm the create report process
 function confirmationReportStep() {
   let step = async (ctx) => {
     try {

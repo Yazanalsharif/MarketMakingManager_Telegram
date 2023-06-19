@@ -13,9 +13,10 @@ const getPairs = async (adminId) => {
       .get();
 
     if (pairSnapshot.empty) {
-      throw new ErrorResponse(
-        "There are no pairs belong to the user, Please make sure you have pairs first"
-      );
+      return undefined;
+      // throw new ErrorResponse(
+      //   "There are no pairs belong to the user, Please make sure you have pairs first"
+      // );
     }
 
     pairSnapshot.forEach((doc) => {

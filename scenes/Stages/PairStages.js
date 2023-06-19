@@ -11,6 +11,7 @@ const {
   activityReportList,
   statusReportList,
   priceStrategyList,
+  limitOrderList,
 } = require("../../view/marketMaker");
 
 //utils
@@ -90,6 +91,13 @@ function selectPairStep(back = "back") {
         console.log(query);
       }
 
+      const pairs = await getPairs(ctx.wizard.state.adminId);
+      ctx.wizard.state.pairs = pairs;
+
+      if (!pairs || pairs?.length === 0) {
+        ctx.wizard.state.message = `There are no pairs belongs to the Admin, Please Add new pair\n\n`;
+      }
+
       if (query === "main") {
         await mainMenu(ctx, bot);
         return ctx.scene.leave();
@@ -167,14 +175,15 @@ function selectPairStep(back = "back") {
           { text: "back", callback_data: "back_from_help" },
         ]);
       } else {
-        const pairs = await getPairs(ctx.wizard.state.adminId);
-
-        for (let option of pairs) {
-          keyboard_options[0].push({
-            text: option.data.pair,
-            callback_data: option.id,
-          });
+        if (pairs) {
+          for (let option of pairs) {
+            keyboard_options[0].push({
+              text: option.data.pair,
+              callback_data: option.id,
+            });
+          }
         }
+
         keyboard_options.push([{ text: "Help", callback_data: "help" }]);
         keyboard_options.push([
           { text: "Back ", callback_data: "back_from_selectPair" },
@@ -573,6 +582,7 @@ function quoteStep() {
   };
   return step;
 }
+
 function limitStep() {
   let step = async (ctx) => {
     try {
@@ -693,6 +703,7 @@ function limitStep() {
   };
   return step;
 }
+
 function thresholdStep() {
   let step = async (ctx) => {
     try {
@@ -813,6 +824,7 @@ function thresholdStep() {
   };
   return step;
 }
+
 function priceStrategyTypeStep() {
   let step = async (ctx) => {
     try {
@@ -930,6 +942,7 @@ function priceStrategyTypeStep() {
   };
   return step;
 }
+
 function priceStrategyThresholdStep() {
   let step = async (ctx) => {
     try {
@@ -1706,27 +1719,30 @@ function displayInformationsStep(dataType) {
           // reports key to discharge the reports values
           let reportsKey;
           dataToPrint += `\n`;
-          for (let i = 0; i < reports.length; i++) {
-            // array of the report keys
-            reportsKey = Object.keys(reports[i].data);
+          // if report exist
+          if (reports) {
+            for (let i = 0; i < reports.length; i++) {
+              // array of the report keys
+              reportsKey = Object.keys(reports[i].data);
 
-            for (let key of reportsKey) {
-              console.log(key);
-              // pair and sandbox must be ignored from the models because its display only they added auto
-              if (key === "pair" || key === "sandbox") {
-                continue;
-                // dataToPrint =
-                //   dataToPrint + key + " : " + reports[i].data[key] + "\n";
-              } else {
-                dataToPrint =
-                  dataToPrint +
-                  MODELS.activityReport[key].name +
-                  " : " +
-                  reports[i].data[key] +
-                  "\n";
+              for (let key of reportsKey) {
+                console.log(key);
+                // pair and sandbox must be ignored from the models because its display only they added auto
+                if (key === "pair" || key === "sandbox") {
+                  continue;
+                  // dataToPrint =
+                  //   dataToPrint + key + " : " + reports[i].data[key] + "\n";
+                } else {
+                  dataToPrint =
+                    dataToPrint +
+                    MODELS.activityReport[key].name +
+                    " : " +
+                    reports[i].data[key] +
+                    "\n";
+                }
               }
+              dataToPrint += "\n";
             }
-            dataToPrint += "\n";
           }
         } else {
           dataToPrint =
