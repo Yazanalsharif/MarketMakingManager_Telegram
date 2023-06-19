@@ -198,7 +198,7 @@ function passwordStep() {
 
             console.log(data);
 
-            // await updateAdmin(data);
+            await updateAdmin(data);
 
             // here is throwing error the message won't be edited
             // mainMenu doesn't edit the message
