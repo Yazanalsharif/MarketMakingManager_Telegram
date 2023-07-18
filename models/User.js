@@ -109,17 +109,21 @@ const signOut = async (ctx) => {
 
 const getUserByUserName = async (userName) => {
   try {
+    let adminId;
+
     const adminsSnapshot = await adminsCollection
       .where("telegram_user", "==", userName)
       .get();
 
     if (adminsSnapshot.empty) {
-      throw new ErrorResponse(
-        "The userName doesn't exist, Please make sure you are registered in the app and signed in"
-      );
+      return undefined;
     }
 
-    return adminsSnapshot;
+    adminsSnapshot.forEach((doc) => {
+      adminId = doc.id;
+    });
+
+    return adminId;
   } finally {
   }
 };

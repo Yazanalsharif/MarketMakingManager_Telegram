@@ -95,6 +95,20 @@ const verifyTime = async (time) => {
   }
 };
 
+const removeItemArray = async (array, item) => {
+  try {
+    let index = array.indexOf(item);
+
+    if (index > -1) {
+      array.splice(index);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const removeArraysArray = async (baseArray, deletedArray) => {};
+
 module.exports = {
   contentShouldEdit,
   checkOptions,
@@ -102,4 +116,5 @@ module.exports = {
   resetStage,
   verifyTime,
   stringLenght,
+  removeItemArray,
 };

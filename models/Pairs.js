@@ -47,7 +47,7 @@ const getPair = async (docId, adminId) => {
     // console.log("The function has been executed in the Pairs Module");
   }
 };
-
+// update the pair fields
 const updatePair = async (data, adminId, docId) => {
   try {
     const pairSnapshot = db
@@ -61,7 +61,7 @@ const updatePair = async (data, adminId, docId) => {
     console.log(err);
   }
 };
-
+// add new pair
 const addNewPair = async (data, adminId) => {
   try {
     const pairSnapshot = db

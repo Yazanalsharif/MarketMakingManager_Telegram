@@ -1,4 +1,4 @@
-const bot = require("../bot");
+const { bot, notificationBot } = require("../bot");
 const { Scenes } = require("telegraf");
 const { mainMenu } = require("../view/main");
 const { errorHandlerBot } = require("../utils/errorHandler");
@@ -9,6 +9,9 @@ const { MODELS } = require("../models/models");
 const {
   getPairData,
   getAccountsData,
+  enableNotification,
+  disableNotification,
+  notificationStart,
 } = require("../controllers/marketMakerController");
 
 const {
@@ -19,6 +22,7 @@ const {
   priceStrategyList,
   changeStrategyList,
   tradingAccountList,
+  notificationList,
 } = require("../view/marketMaker");
 const { models } = require("mongoose");
 
@@ -28,7 +32,7 @@ bot.use(async (ctx, next) => {
     next();
   } catch (err) {
     ctx.reply(err.message);
-    await setTimeout(() => {
+    setTimeout(() => {
       let id =
         ctx.update.message?.message_id ||
         ctx.update.callback_query?.message.message_id;
@@ -49,6 +53,14 @@ bot.action("backMain", async (ctx) => {
 bot.action("limit", async (ctx) => {
   try {
     await limitOrderList(ctx, bot);
+  } catch (err) {
+    console.log(err);
+  }
+});
+// Auto restart option
+bot.action("autoStart", async (ctx) => {
+  try {
+    await ctx.scene.enter("autoRestartScene");
   } catch (err) {
     console.log(err);
   }
@@ -112,7 +124,6 @@ bot.action("getTradingAccount", async (ctx) => {
 });
 
 // actions related to the trading account
-
 bot.action("precent", async (ctx) => {
   try {
     await ctx.scene.enter("precentOrderScene");
@@ -148,6 +159,14 @@ bot.action("getActivityReport", async (ctx) => {
 bot.action("deleteActivityReport", async (ctx) => {
   try {
     await ctx.scene.enter("deleteReportScene");
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+bot.action("editActivityReport", async (ctx) => {
+  try {
+    await ctx.scene.enter("updateReportScene");
   } catch (err) {
     console.log(err);
   }
@@ -353,6 +372,58 @@ bot.action("helpStrategyChange", async (ctx) => {
   }
 });
 
+bot.action("helpNotification", async (ctx) => {
+  let helpNotification;
+  try {
+    helpNotification = `Notifications is available through a MarketMaker notification bot.\n\nClick on Enable button then the link will be sent, Start the notification bot by clicking on the link and then click on the button start there.\n\nIf you disabled the notification and then enable it then there are no need to start the notification bot again`;
+    await ctx.editMessageText(helpNotification, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "Back", callback_data: "backNotification" }],
+        ],
+      },
+    });
+  } catch (err) {
+    console.log(err);
+    await bot.telegram.sendMessage(ctx.chat.id, helpStrategyChange, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "Back", callback_data: "backChangeStrategy" }],
+        ],
+      },
+    });
+  }
+});
+
+//  ******************************************** Notification Start
+bot.action("notificationBot", async (ctx) => {
+  try {
+    await notificationList(ctx, bot);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+// enable notifications
+bot.action("enableNotification", async (ctx) => {
+  try {
+    await enableNotification(ctx, bot);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+// disable notification
+bot.action("disableNotification", async (ctx) => {
+  try {
+    await disableNotification(ctx, bot);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+//  ******************************************** Notification End
+
 //  ******************************************** Pairs Functions
 bot.action("pairList", async (ctx) => {
   try {
@@ -443,6 +514,7 @@ bot.action("cancelation", async (ctx) => {
 
 // ******************************************** Back Functions
 
+// delete back main and call the main callback data for each of the following properties
 bot.action("backMain", async (ctx) => {
   try {
     await mainMenu(ctx, bot);
@@ -502,6 +574,23 @@ bot.action("backPriceStrategy", async (ctx) => {
 bot.action("backChangeStrategy", async (ctx) => {
   try {
     await changeStrategyList(ctx, bot);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+bot.action("backNotification", async (ctx) => {
+  try {
+    await notificationList(ctx, bot);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+// Notification Bot commands
+notificationBot.start(async (ctx) => {
+  try {
+    await notificationStart(ctx, bot);
   } catch (err) {
     console.log(err);
   }

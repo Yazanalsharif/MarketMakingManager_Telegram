@@ -1,4 +1,4 @@
-const bot = require("../bot");
+const { bot, notificationBot } = require("../bot");
 const { signInView } = require("../view/main");
 const { isNotAuthorized } = require("../middlewares/authorized");
 const deleteMessage = require("../utils/deleteMessage");

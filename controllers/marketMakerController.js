@@ -2,7 +2,7 @@ const chalk = require("chalk");
 
 const { isAuthorized } = require("../middlewares/authorized");
 // const deleteMessage = require("../utils/deleteMessage");
-const { getAdmin } = require("../models/User");
+const { getAdmin, getUserByUserName } = require("../models/User");
 const { mainMenu } = require("../view/main");
 
 const { getStatusesData } = require("../models/Status");
@@ -13,6 +13,10 @@ const { getPairs } = require("../models/Pairs");
 const { getEngines } = require("../models/engines");
 
 const { MODELS } = require("../models/models");
+const {
+  updateNotification,
+  getNotifications,
+} = require("../models/notification");
 
 // // @Description             Change the amount_limit in the botConfig
 // // access                   Admin
@@ -401,6 +405,102 @@ const menuConfig = async (ctx, bot) => {
     // }, 1000);
   }
 };
+// this function for enabling the notification
+const enableNotification = async (ctx, bot) => {
+  try {
+    let title = `Notification will be send from another telegram bot.\n\nPlease click to the below link and start the notification bot.\nt.me/NotificiationTest_bot\n\n`;
+    let enableInlineKeyboard = [
+      [{ text: "Back", callback_data: "notificationBot" }],
+    ];
+    await ctx.editMessageText(title, {
+      reply_markup: {
+        inline_keyboard: enableInlineKeyboard,
+      },
+    });
+    // get the admin id
+    const adminId = await getAdmin(ctx);
+    // get the notification data
+    const notify = await getNotifications(adminId);
+
+    if (!notify.data.chat_id_Notifi) {
+      return;
+    }
+
+    const data = {
+      enable: true,
+    };
+    // update the user
+    await updateNotification(data, adminId);
+  } catch (err) {
+    console.log(err);
+    await bot.telegram.sendMessage(ctx.chat.id, err.message, {
+      reply_markup: {
+        inline_keyboard: inline_keyboard,
+      },
+    });
+  }
+};
+
+// This function for disabling the notification
+const disableNotification = async (ctx, bot) => {
+  try {
+    const adminId = await getAdmin(ctx);
+
+    const data = {
+      enable: false,
+    };
+    // update the user
+    await updateNotification(data, adminId);
+
+    let title = `The Notification has been disabled.\n\nYou can enable it by click on enable button in the Notification Menu.\n\nThere are no need to start the notification bot if you started it in the previous short of time`;
+    let disableInlineKeyboard = [
+      [{ text: "Back", callback_data: "notificationBot" }],
+    ];
+    await ctx.editMessageText(title, {
+      reply_markup: {
+        inline_keyboard: disableInlineKeyboard,
+      },
+    });
+  } catch (err) {
+    console.log(err);
+    await bot.telegram.sendMessage(ctx.chat.id, err.message, {
+      reply_markup: {
+        inline_keyboard: inline_keyboard,
+      },
+    });
+  }
+};
+
+const notificationStart = async (ctx) => {
+  try {
+    const adminId = await getUserByUserName(ctx.from.username);
+
+    if (!adminId) {
+      // The userName doesn't exist in the database
+      return ctx.reply(
+        `The userName doesn't register in the database, Please signIn to the telegram bot through the below link\nhttps://t.me/YazanTestBot`
+      );
+    }
+
+    if (!ctx.chat.id) {
+      return ctx.reply(
+        `You can't start the notifiaction bot now, Please try again later`
+      );
+    }
+    const data = {
+      chat_id_Notifi: ctx.chat.id,
+      enable: true,
+    };
+    // update the user
+    await updateNotification(data, adminId);
+
+    return ctx.reply(
+      "The notification has been enabled.\n\nYou will receive the notification for your market making bot throgh this telegram bot"
+    );
+  } catch (err) {
+    ctx.reply(err.message);
+  }
+};
 
 module.exports = {
   // updateAmountLimit,
@@ -413,4 +513,7 @@ module.exports = {
   getPairData,
   getAccountsData,
   menuConfig,
+  enableNotification,
+  disableNotification,
+  notificationStart,
 };

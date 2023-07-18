@@ -53,6 +53,7 @@ const addActivityReport = async (data, adminId, pairId) => {
 // };
 
 // Get the report config data and id that belong to the user id
+
 const getReports = async (adminId, pairId) => {
   try {
     let reports = [];
@@ -79,7 +80,6 @@ const getReports = async (adminId, pairId) => {
   }
 };
 
-//
 const getSpecificReport = async (adminId, pairId, reportId) => {
   try {
     const pairCollection = db
@@ -116,10 +116,59 @@ const deleteReportConfig = async (adminId, pairId, reportId) => {
   }
 };
 
+const getEmailsInTheReport = async (adminId, pairId, reportId) => {
+  try {
+    let emails = [];
+    const pairCollection = db
+      .collection("admins")
+      .doc(adminId)
+      .collection("pairs")
+      .doc(pairId);
+
+    const reportsCollection = pairCollection.collection("reports");
+
+    const report = await reportsCollection.doc(reportId).get();
+
+    if (report.data()) {
+      emails = report.data().emails;
+    }
+
+    return emails;
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const updateReport = async (data, adminId, pairId, reportId) => {
+  try {
+    const pairSnapshot = db
+      .collection("admins")
+      .doc(adminId)
+      .collection("pairs")
+      .doc(pairId);
+
+    const reportCollection = pairSnapshot.collection("reports").doc(reportId);
+
+    const updateReport = await reportCollection.update(data);
+
+    return true;
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+// getEmailsInTheReport(
+//   "JzvrgJtx8idJXkw8R8C7RXvnhkE3",
+//   "YDPkf5TATzff8B80K6Ep",
+//   "360rWlVeFTmMoepCXkY0"
+// );
+
 module.exports = {
   addActivityReport,
   getReports,
   deleteReportConfig,
   getSpecificReport,
   getReports,
+  getEmailsInTheReport,
+  updateReport,
 };

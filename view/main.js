@@ -1,19 +1,28 @@
 const mainMenuText = `Check the below options`;
 const inline_keyboard = [
-  [{ text: "Trading Accounts", callback_data: "tradingAccountList" }],
+  [
+    { text: "Pairs", callback_data: "pairList" },
+    { text: "Auto Start", callback_data: "autoStart" },
+  ],
   [
     { text: "Limit Amount", callback_data: "limit" },
     { text: "Activity Report", callback_data: "activityReport" },
   ],
 
   [
+    { text: "Trading Accounts", callback_data: "tradingAccountList" },
     { text: "Status", callback_data: "statusReport" },
-    { text: "Pairs", callback_data: "pairList" },
   ],
   [{ text: "Price Strategy", callback_data: "priceStrategy" }],
   [
     { text: "Cancelation Timeout", callback_data: "cancelation" },
     { text: "Orders Gap", callback_data: "ordersGap" },
+  ],
+  [
+    {
+      text: "Notification",
+      callback_data: "notificationBot",
+    } /* { text: "Sign out", callback_data: "signout" }*/,
   ],
   [{ text: "Help", callback_data: "mainMenuHelp" }],
 ];

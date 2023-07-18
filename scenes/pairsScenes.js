@@ -15,6 +15,7 @@ const {
   confirmationStep,
   updateConfirmationStep,
   displayInformationsStep,
+  autoStartStep,
 } = require("./Stages/PairStages");
 
 // Adding pair scene
@@ -84,6 +85,14 @@ const orderGapScene = new Scenes.WizardScene(
   updateConfirmationStep()
 );
 
+// auto restart scene
+const autoRestartScene = new Scenes.WizardScene(
+  "autoRestartScene",
+  selectPairStep("pairsList"),
+  autoStartStep(),
+  updateConfirmationStep()
+);
+
 module.exports = {
   addingPairScene,
   getPriceStrategyScene,
@@ -93,4 +102,5 @@ module.exports = {
   precentOrderScene,
   orderCancelationScene,
   orderGapScene,
+  autoRestartScene,
 };

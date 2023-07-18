@@ -1,4 +1,4 @@
-const bot = require("../../bot");
+const { bot, notificationBot } = require("../../bot");
 // schemas
 const { MODELS } = require("../../models/models");
 
@@ -12,6 +12,7 @@ const {
   contentShouldEdit,
   resetStage,
   verifyTime,
+  removeItemArray,
 } = require("./stageUtils");
 
 //modules
@@ -20,8 +21,11 @@ const {
   getReports,
   deleteReportConfig,
   getSpecificReport,
+  getEmailsInTheReport,
+  updateReport,
 } = require("../../models/Report");
 
+// Choose the report that you want to complete the process with
 function selectReport() {
   const stage = async (ctx) => {
     try {
@@ -187,6 +191,7 @@ function selectReport() {
   return stage;
 }
 
+// confirm the delete action
 function deleteReportConfirmationStep() {
   let step = async (ctx) => {
     try {
@@ -322,7 +327,7 @@ function deleteReportConfirmationStep() {
   };
   return step;
 }
-
+//email step for let the user enter more than one email
 function emailStep() {
   const step = async (ctx) => {
     try {
@@ -330,51 +335,36 @@ function emailStep() {
       let query;
       let shouldEdit = true;
       let title = "";
-      let emails = [];
+      let email;
 
       if (ctx.message) {
         if (ctx.message.text && !ctx.wizard.state.firstEntry) {
-          // if (
-          //   isNumeric(ctx.message.text) &&
-          //   parseInt(ctx.message.text) <= MODELS.pairs.limit.max &&
-          //   parseInt(ctx.message.text) >= MODELS.pairs.limit.min
-          // ) {
-          //   let id = ctx.update.message.message_id;
-          //   await deleteMessage(ctx, bot, id);
-          //   limit = ctx.message.text;
-          //   ctx.wizard.state.data.limit = parseInt(limit);
-          //   ctx.wizard.next();
-          //   resetStage(ctx);
-          //   console.log(`resetStage works`);
-          //   return ctx.wizard.steps[ctx.wizard.cursor](ctx);
-          // }
-
-          if (
-            ctx.message.text.trim().match(MODELS.activityReport.emails.verify)
-          ) {
+          ctx.message.text = ctx.message.text.trim().toLowerCase();
+          if (ctx.message.text.match(MODELS.activityReport.emails.verify)) {
             let id = ctx.update.message.message_id;
             await deleteMessage(ctx, bot, id);
-            emails.push(ctx.message.text);
+            email = ctx.message.text;
 
-            // insert the multi emails in the same stage,
-            if (
-              ctx.wizard.state.data.emails &&
-              ctx.wizard.state.data.emails.length !== 0
-            ) {
-              ctx.wizard.state.data.emails.push(emails[0]);
+            // if the emails is empty please assign it an array
+            if (ctx.wizard.state.data.emails === undefined) {
+              ctx.wizard.state.data.emails = [];
+              ctx.wizard.state.data.emails.push(email);
             } else {
-              // the emails will be an array
-              ctx.wizard.state.data.emails = emails;
+              console.log(ctx.wizard.state.data.emails.includes(email));
+              // if the email exist in the array
+              if (!ctx.wizard.state.data.emails.includes(email)) {
+                ctx.wizard.state.data.emails.push(email);
+              } else {
+                ctx.wizard.state.message =
+                  "You already entered the same email, Please enter a different email or click Next\n\n";
+              }
             }
-            // ctx.wizard.next();
-
-            // resetStage(ctx);
-            // return ctx.wizard.steps[ctx.wizard.cursor](ctx);
           } else {
             let id = ctx.update.message.message_id;
             await deleteMessage(ctx, bot, id);
+            console.log("error message");
             ctx.wizard.state.message =
-              MODELS.activityReport.emails.warning + "\n";
+              MODELS.activityReport.emails.warning + "\n\n";
           }
         } else if (ctx.wizard.state.helpMode) {
           let id = ctx.update.message.message_id;
@@ -417,7 +407,11 @@ function emailStep() {
 
       // display the emails in the message either it was in the help mode or not
       if (ctx.wizard.state.data.emails) {
-        ctx.wizard.state.message = `Registered emails: \n`;
+        let emailTitle = `Registered emails: \n`;
+        ctx.wizard.state.message === undefined
+          ? (ctx.wizard.state.message = emailTitle)
+          : (ctx.wizard.state.message = ctx.wizard.state.message + emailTitle);
+
         for (email of ctx.wizard.state.data.emails) {
           ctx.wizard.state.message += email + `\n`;
         }
@@ -921,27 +915,20 @@ function confirmationReportStep() {
         let dataToSave = {};
         // to display
 
-        // dataToSave["base"] = ctx.wizard.state.data.base;
-        // dataToSave["quote"] = ctx.wizard.state.data.quote;
-        // dataToSave["limit"] = ctx.wizard.state.data.limit;
         dataToSave["time"] = ctx.wizard.state.data?.time;
         dataToSave["emails"] = ctx.wizard.state.data?.emails;
         dataToSave["type"] = ctx.wizard.state.data?.type;
         // dataToSave["priceStrategy"] = priceStrategy;
         dataToSave["pair"] =
           ctx.wizard.state.data.base + "-" + ctx.wizard.state.data.quote;
-        // dataToSave["symbol"] =
-        //   ctx.wizard.state.data.base + ctx.wizard.state.data.quote;
-        // dataToSave["buySellDiff"] = ctx.wizard.state.data.buySellDiff;
-        // dataToSave["engineName"] = ctx.wizard.state.data.engine;
-        // dataToSave["engine"] = ctx.wizard.state.data.engine;
+
         dataToSave["sandbox"] = true;
         dataToSave["enable"] = ctx.wizard.state.data.enable || true;
 
         console.log(`data`, dataToSave);
         console.log(`pairId`, ctx.wizard.state.pairId);
         console.log(`adminId`, ctx.wizard.state.adminId);
-        // await addNewPair(dataToSave, ctx.wizard.state.adminId);
+
         const activityReport = await addActivityReport(
           dataToSave,
           ctx.wizard.state.adminId,
@@ -1049,6 +1036,359 @@ function confirmationReportStep() {
   return step;
 }
 
+// delete email step
+function deleteEmailStep() {
+  let step = async (ctx) => {
+    try {
+      console.log("coming to delete email step");
+      let query;
+      let shouldEdit = true;
+      let title = "";
+      if (ctx.message) {
+        if (ctx.message.text && !ctx.wizard.state.firstEntry) {
+          let id = ctx.update.message.message_id;
+          console.log("id", id);
+          await deleteMessage(ctx, bot, id);
+          ctx.wizard.state.message = MODELS.errors.textInsteadOfInline.text;
+        } else if (ctx.wizard.state.helpMode) {
+          let id = ctx.update.message.message_id;
+          await deleteMessage(ctx, bot, id);
+        }
+      }
+      ctx.wizard.state.firstEntry = false;
+
+      if (
+        !ctx.wizard.state.data.emails ||
+        ctx.wizard.state.data.emails?.length === 0
+      ) {
+        ctx.wizard.state.message = `There are no emails registered\n\n`;
+        // // get the list of the emails
+        // const emailList = await getEmailsInTheReport(
+        //   ctx.wizard.state.adminId,
+        //   ctx.wizard.state.pairId,
+        //   ctx.wizard.state.reportId
+        // );
+        // if (emailList.length === 0) {
+        //   ctx.wizard.state.message = `There are no Emails registered\n\n`;
+        // } else {
+        //   ctx.wizard.state.emailList = emailList;
+        // }
+      }
+      // } else {
+      // }
+
+      // check if the ctx came from the inline keyboard
+      if (ctx.update.callback_query) {
+        query = ctx.update.callback_query.data;
+        // OLD
+        // const isEmailExist = ctx.wizard.state.emailList?.includes(query);
+        // NES
+        const isEmailExist = ctx.wizard.state.data.emails?.includes(query);
+
+        // here check the emails that you want to delete
+        if (isEmailExist) {
+          if (ctx.wizard.state.removedEmails === undefined)
+            ctx.wizard.state.removedEmails = [];
+
+          // push the removed email to the removed email array
+          ctx.wizard.state.removedEmails.push(query);
+          // remove emails from the email list
+          removeItemArray(ctx.wizard.state.data.emails, query);
+          console.log(
+            "emails after delete one item",
+            ctx.wizard.state.data.emails
+          );
+          // // remove email from the emails list
+          // removeItemArray(ctx.wizard.state.data.emails, query);
+        }
+
+        console.log(query);
+      }
+
+      if (query === "main") {
+        await mainMenu(ctx, bot);
+        return ctx.scene.leave();
+      }
+      if (query === "back_from_deleteEmail") {
+        ctx.wizard.selectStep(ctx.wizard.cursor - 1);
+        resetStage(ctx);
+        return ctx.wizard.steps[ctx.wizard.cursor](ctx);
+      }
+
+      if (query === "back_from_help") {
+        ctx.wizard.state.shouldEdit = true;
+        ctx.wizard.state.helpMode = false;
+        ctx.wizard.state.message = undefined;
+      }
+
+      if (query === "help") {
+        ctx.wizard.state.shouldEdit = true;
+        ctx.wizard.state.helpMode = true;
+        title = MODELS.activityReport.deleteEmails.description;
+        ctx.wizard.state.message = undefined;
+        ctx.wizard.state.title = title;
+      }
+
+      // we need this to be executed after the help condition
+      if (ctx.wizard.state.removedEmails) {
+        ctx.wizard.state.message === undefined
+          ? (ctx.wizard.state.message = "The Removed emails:\n")
+          : (ctx.wizard.state.message =
+              ctx.wizard.state.message + "The Removed emails:\n");
+
+        for (let removed of ctx.wizard.state.removedEmails) {
+          console.log(removed);
+          ctx.wizard.state.message += removed + "\n";
+        }
+        ctx.wizard.state.message += "\n";
+      }
+
+      if (ctx.wizard.state.helpMode) {
+        title = MODELS.activityReport.deleteEmails.description;
+      } else {
+        title =
+          ctx.wizard.state.message === undefined
+            ? MODELS.activityReport.deleteEmails.title
+            : ctx.wizard.state.message +
+              MODELS.activityReport.deleteEmails.title;
+      }
+
+      if (ctx.wizard.state.title !== title) {
+        ctx.wizard.state.shouldEdit = true;
+        ctx.wizard.state.title = title;
+      }
+
+      shouldEdit = contentShouldEdit(ctx);
+
+      let keyboard_options = [[]];
+      // if the user click next
+      if (query === "next_from_remove_emails") {
+        ctx.wizard.next();
+        resetStage(ctx);
+        return ctx.wizard.steps[ctx.wizard.cursor](ctx);
+      }
+      // help mode
+      if (ctx.wizard.state.helpMode) {
+        keyboard_options.push([
+          { text: "back", callback_data: "back_from_help" },
+        ]);
+      } else {
+        console.log(`The emails as an options, `, ctx.wizard.state.data.emails);
+        // display the list of the existing emails
+        for (let option of ctx.wizard.state.data.emails) {
+          keyboard_options[0].push({
+            text: option,
+            callback_data: option,
+          });
+        }
+        // push the options object in the inline keyboard
+        keyboard_options.push([
+          { text: "Next", callback_data: "next_from_remove_emails" },
+        ]);
+        keyboard_options.push([{ text: "Help", callback_data: "help" }]);
+        keyboard_options.push([
+          { text: "Back ", callback_data: "back_from_deleteEmail" },
+        ]);
+        keyboard_options.push([
+          { text: "Back To Home", callback_data: "main" },
+        ]);
+      }
+
+      if (shouldEdit) {
+        await ctx.telegram.editMessageText(
+          ctx.chat.id,
+          ctx.wizard.state.messageToEdit,
+          0,
+          {
+            text: title,
+            inline_message_id: ctx.wizard.state.messageToEdit,
+            reply_markup: {
+              inline_keyboard: keyboard_options,
+            },
+          }
+        );
+      }
+
+      ctx.wizard.state.message = undefined;
+      return;
+    } catch (err) {
+      // reply with the error
+      console.log(err);
+      ctx.reply(err.message, {
+        reply_markup: {
+          inline_keyboard: [[{ text: "Back", callback_data: "main" }]],
+        },
+      });
+    }
+  };
+
+  return step;
+}
+
+// make this function for the report
+function updateConfirmationStep() {
+  let step = async (ctx) => {
+    try {
+      console.log("coming to confirmation Type");
+      let query;
+      let shouldEdit = true;
+      let title = "";
+      if (ctx.message) {
+        if (ctx.message.text && !ctx.wizard.state.firstEntry) {
+          let id = ctx.update.message.message_id;
+          console.log("id", id);
+          await deleteMessage(ctx, bot, id);
+          ctx.wizard.state.message = MODELS.errors.textInsteadOfInline.text;
+        } else if (ctx.wizard.state.helpMode) {
+          let id = ctx.update.message.message_id;
+          await deleteMessage(ctx, bot, id);
+        }
+      }
+      ctx.wizard.state.firstEntry = false;
+
+      // check if the ctx came from the inline keyboard
+      if (ctx.update.callback_query) {
+        query = ctx.update.callback_query.data;
+        console.log(query);
+      }
+
+      if (query === "main") {
+        await mainMenu(ctx, bot);
+        return ctx.scene.leave();
+      }
+      if (query === "update") {
+        console.log(ctx.wizard.state.data);
+
+        let dataToSave = {};
+
+        dataToSave["time"] = ctx.wizard.state.data?.time;
+        dataToSave["emails"] = ctx.wizard.state.data?.emails;
+        dataToSave["type"] = ctx.wizard.state.data?.type;
+        dataToSave["pair"] =
+          ctx.wizard.state.data.base + "-" + ctx.wizard.state.data.quote;
+        dataToSave["sandbox"] = true;
+        dataToSave["enable"] = ctx.wizard.state.data?.enable || true;
+
+        console.log(`The data to save`, dataToSave);
+        console.log(`pairId`, ctx.wizard.state.pairId);
+        console.log(`adminId`, ctx.wizard.state.adminId);
+
+        const activityReport = await updateReport(
+          dataToSave,
+          ctx.wizard.state.adminId,
+          ctx.wizard.state.pairId,
+          ctx.wizard.state.reportId
+        );
+
+        // if the activity report has no been created becuase a duplication error
+        if (!activityReport) {
+          ctx.wizard.state.message = `The Server couldn't handle the process Please contact to the admin or try again later\n\n`;
+        } else {
+          await mainMenu(ctx, bot);
+          return ctx.scene.leave();
+        }
+      }
+
+      // if the update didn't comfirmed
+      if (query === "no") {
+        await mainMenu(ctx, bot);
+        return ctx.scene.leave();
+      }
+
+      if (query === "back_from_confirmation") {
+        ctx.wizard.selectStep(ctx.wizard.cursor - 1);
+        resetStage(ctx);
+        return ctx.wizard.steps[ctx.wizard.cursor](ctx);
+      }
+
+      let dataToPrint = "";
+      const dataKeys = Object.keys(ctx.wizard.state.data);
+      console.log(dataKeys);
+
+      for (let key of dataKeys) {
+        if (key === "quote" || key === "base") {
+          dataToPrint =
+            dataToPrint +
+            MODELS.pairs[key].name +
+            " : " +
+            ctx.wizard.state.data[key] +
+            "\n";
+        } else {
+          dataToPrint =
+            dataToPrint +
+            MODELS.activityReport[key].name +
+            " : " +
+            ctx.wizard.state.data[key] +
+            "\n";
+        }
+      }
+
+      title =
+        ctx.wizard.state.message === undefined
+          ? MODELS.activityReport.updateConfirmation.title + `\n` + dataToPrint
+          : ctx.wizard.state.message +
+            MODELS.activityReport.updateConfirmation.title +
+            dataToPrint;
+      if (ctx.wizard.state.title !== title) {
+        ctx.wizard.state.shouldEdit = true;
+        ctx.wizard.state.title = title;
+      }
+      shouldEdit = contentShouldEdit(ctx);
+
+      let keyboard_options = [[]];
+      if (ctx.wizard.state.helpMode) {
+        keyboard_options.push([
+          { text: "back", callback_data: "back_from_help" },
+        ]);
+      } else {
+        for (let option of MODELS.activityReport.updateConfirmation.options) {
+          keyboard_options[0].push({
+            text: option.name,
+            callback_data: option.id,
+          });
+        }
+        keyboard_options.push([
+          { text: "Back ", callback_data: "back_from_confirmation" },
+        ]);
+        keyboard_options.push([
+          { text: "Back To Home", callback_data: "main" },
+        ]);
+      }
+
+      if (shouldEdit) {
+        await ctx.telegram.editMessageText(
+          ctx.chat.id,
+          ctx.wizard.state.messageToEdit,
+          0,
+          {
+            text: title,
+            inline_message_id: ctx.wizard.state.messageToEdit,
+            reply_markup: {
+              inline_keyboard: keyboard_options,
+            },
+          }
+        );
+      }
+
+      ctx.wizard.state.message = undefined;
+      return;
+    } catch (err) {
+      // reply with the error
+      console.log(err);
+      ctx.reply(err.message, {
+        reply_markup: {
+          inline_keyboard: [[{ text: "Back", callback_data: "main" }]],
+        },
+      });
+    }
+  };
+  return step;
+}
+
+// for enable the report or disable it
+function enableStep() {}
+
+// Exports the modules
 module.exports = {
   selectReport,
   deleteReportConfirmationStep,
@@ -1057,4 +1397,6 @@ module.exports = {
   timeStep,
   telegramStep,
   confirmationReportStep,
+  deleteEmailStep,
+  updateConfirmationStep,
 };

@@ -1,4 +1,4 @@
-const bot = require("../../bot");
+const { bot, notificationBot } = require("../../bot");
 // schemas
 const { MODELS } = require("../../models/models");
 

@@ -1,6 +1,6 @@
 require("dotenv").config({ path: "./config/.env" });
 const { Scenes, session } = require("telegraf");
-const bot = require("./bot");
+const { bot, notificationBot } = require("./bot");
 const server = require("./server");
 const chalk = require("chalk");
 
@@ -14,6 +14,7 @@ const {
   createReportScene,
   getReportScene,
   deleteReportScene,
+  updateReportScene,
 } = require("./scenes/reportScenes");
 
 const { updateStatusScene, getStatusScene } = require("./scenes/statusScenes");
@@ -27,6 +28,7 @@ const {
   precentOrderScene,
   orderCancelationScene,
   orderGapScene,
+  autoRestartScene,
 } = require("./scenes/pairsScenes");
 
 const {
@@ -51,13 +53,26 @@ const launchBot = async () => {
   }
 };
 
+const launchNotificationBot = async () => {
+  try {
+    notificationBot.launch();
+    console.log(chalk.white.bgBlue.bold(`The Notification bot is launched...`));
+  } catch (err) {
+    if (err.message) {
+      console.log(err.message);
+    } else {
+      console.log(err);
+    }
+  }
+};
+
 let stage = new Scenes.Stage([
   amountOrderScene,
   precentOrderScene,
   createReportScene,
   getReportScene,
   deleteReportScene,
-  // here must be the others report scenes
+  updateReportScene,
   getStatusScene,
   updateStatusScene,
   updateStrategyTypeScene,
@@ -69,6 +84,7 @@ let stage = new Scenes.Stage([
   addingPairScene,
   addTradingAccount,
   deleteTradingAccount,
+  autoRestartScene,
 ]);
 
 bot.use(async (ctx, next) => {
@@ -235,5 +251,5 @@ process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
 
 launchBot();
-
+launchNotificationBot();
 module.exports = { bot };

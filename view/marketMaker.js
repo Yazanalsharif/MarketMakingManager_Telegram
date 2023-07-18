@@ -1,3 +1,6 @@
+const { getNotifications } = require("../models/notification");
+const { getAdmin } = require("../models/User");
+
 // PAIRS
 const pairsListTitle = "Please choose from the operations below";
 const pairsListInlineKeyboard = [
@@ -27,7 +30,7 @@ const activityReportInlineKeyboard = [
   ],
   [
     { text: "Get", callback_data: "getActivityReport" },
-    // { text: "Edit", callback_data: "editActivityReport" },
+    { text: "Update", callback_data: "editActivityReport" },
   ],
   [{ text: "Help", callback_data: "helpActivityList" }],
   [{ text: "Back", callback_data: "backMain" }],
@@ -90,6 +93,16 @@ const tradingAccountsInlineKeyboard = [
     // { text: "Edit", callback_data: "editActivityReport" },
   ],
   [{ text: "Help", callback_data: "helpTradingAccount" }],
+  [{ text: "Back", callback_data: "backMain" }],
+];
+// Notification Title and inline keyboard
+const notificationTitle = `Please choose from the below options`;
+const notificationInlineKeyboard = [
+  [
+    { text: "Enable", callback_data: "enableNotification" },
+    { text: "Disable", callback_data: "disableNotification" },
+  ],
+  [{ text: "Help", callback_data: "helpNotification" }],
   [{ text: "Back", callback_data: "backMain" }],
 ];
 
@@ -209,6 +222,34 @@ const tradingAccountList = async (ctx, bot) => {
   }
 };
 
+const notificationList = async (ctx, bot) => {
+  try {
+    let notifyTitle;
+    const adminId = await getAdmin(ctx);
+
+    let notifData = await getNotifications(adminId);
+    // check if enable does not exist
+    if (!notifData?.data?.enable || notifData?.data?.enable === false) {
+      notifyTitle = `The Notification: Disabled\n\n` + notificationTitle;
+    } else {
+      notifyTitle = `The Notification: Enabled\n\n` + notificationTitle;
+    }
+
+    await ctx.editMessageText(notifyTitle, {
+      reply_markup: {
+        inline_keyboard: notificationInlineKeyboard,
+      },
+    });
+  } catch (err) {
+    console.log(err);
+    await bot.telegram.sendMessage(ctx.chat.id, notificationTitle, {
+      reply_markup: {
+        inline_keyboard: notificationInlineKeyboard,
+      },
+    });
+  }
+};
+
 module.exports = {
   limitOrderList,
   activityReportList,
@@ -217,4 +258,5 @@ module.exports = {
   priceStrategyList,
   changeStrategyList,
   tradingAccountList,
+  notificationList,
 };

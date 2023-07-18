@@ -1,4 +1,4 @@
-const bot = require("../../bot");
+const { bot, notificationBot } = require("../../bot");
 // schemas
 const { MODELS } = require("../../models/models");
 const { ENGINES } = require("../../models/engines");
@@ -618,6 +618,14 @@ function limitStep() {
       }
       ctx.wizard.state.firstEntry = false;
 
+      if (ctx.wizard.state.pair?.limit) {
+        ctx.wizard.state.message =
+          MODELS.pairs.limit.name +
+          ": " +
+          ctx.wizard.state.pair.limit +
+          "$\n\n";
+      }
+
       // check if the ctx came from the inline keyboard
       if (ctx.update.callback_query) {
         query = ctx.update.callback_query.data;
@@ -738,6 +746,14 @@ function thresholdStep() {
         }
       }
       ctx.wizard.state.firstEntry = false;
+
+      if (ctx.wizard.state.pair?.threshold) {
+        ctx.wizard.state.message =
+          MODELS.pairs.threshold.name +
+          ": " +
+          ctx.wizard.state.pair.threshold +
+          "%\n\n";
+      }
 
       // check if the ctx came from the inline keyboard
       if (ctx.update.callback_query) {
@@ -1104,6 +1120,14 @@ function buySellDiffStep() {
       }
       ctx.wizard.state.firstEntry = false;
 
+      if (ctx.wizard.state.pair?.buySellDiff) {
+        ctx.wizard.state.message =
+          MODELS.pairs.buySellDiff.name +
+          ": " +
+          ctx.wizard.state.pair.buySellDiff +
+          "%\n\n";
+      }
+
       // check if the ctx came from the inline keyboard
       if (ctx.update.callback_query) {
         query = ctx.update.callback_query.data;
@@ -1225,6 +1249,14 @@ function orderTimeoutStep() {
       }
       ctx.wizard.state.firstEntry = false;
 
+      if (ctx.wizard.state.pair?.orderTimeout) {
+        ctx.wizard.state.message =
+          MODELS.pairs.orderTimeout.name +
+          ": " +
+          ctx.wizard.state.pair.orderTimeout +
+          " Secounds\n\n";
+      }
+
       // check if the ctx came from the inline keyboard
       if (ctx.update.callback_query) {
         query = ctx.update.callback_query.data;
@@ -1235,16 +1267,19 @@ function orderTimeoutStep() {
         await mainMenu(ctx, bot);
         return ctx.scene.leave();
       }
+
       if (query === "back_from_orderTimeout") {
         ctx.wizard.selectStep(ctx.wizard.cursor - 1);
         resetStage(ctx);
         return ctx.wizard.steps[ctx.wizard.cursor](ctx);
       }
+
       if (query === "back_from_help") {
         ctx.wizard.state.shouldEdit = true;
         ctx.wizard.state.helpMode = false;
         ctx.wizard.state.message = undefined;
       }
+
       if (query === "help") {
         ctx.wizard.state.shouldEdit = true;
         ctx.wizard.state.helpMode = true;
@@ -1252,6 +1287,7 @@ function orderTimeoutStep() {
         ctx.wizard.state.message = undefined;
         ctx.wizard.state.title = title;
       }
+
       if (ctx.wizard.state.helpMode) {
         title = MODELS.pairs.orderTimeout.description;
       } else {
@@ -1260,13 +1296,16 @@ function orderTimeoutStep() {
             ? MODELS.pairs.orderTimeout.title
             : ctx.wizard.state.message + MODELS.pairs.orderTimeout.title;
       }
+
       if (ctx.wizard.state.title !== title) {
         ctx.wizard.state.shouldEdit = true;
         ctx.wizard.state.title = title;
       }
+
       shouldEdit = contentShouldEdit(ctx);
 
       let keyboard_options = [[]];
+
       if (ctx.wizard.state.helpMode) {
         keyboard_options.push([
           { text: "back", callback_data: "back_from_help" },
@@ -1409,171 +1448,6 @@ function confirmationStep() {
         ]);
       } else {
         for (let option of MODELS.pairs.confirmation.options) {
-          keyboard_options[0].push({
-            text: option.name,
-            callback_data: option.id,
-          });
-        }
-        keyboard_options.push([
-          { text: "Back ", callback_data: "back_from_confirmation" },
-        ]);
-        keyboard_options.push([
-          { text: "Back To Home", callback_data: "main" },
-        ]);
-      }
-
-      if (shouldEdit) {
-        await ctx.telegram.editMessageText(
-          ctx.chat.id,
-          ctx.wizard.state.messageToEdit,
-          0,
-          {
-            text: title,
-            inline_message_id: ctx.wizard.state.messageToEdit,
-            reply_markup: {
-              inline_keyboard: keyboard_options,
-            },
-          }
-        );
-      }
-
-      ctx.wizard.state.message = undefined;
-      return;
-    } catch (err) {
-      // reply with the error
-      console.log(err);
-      ctx.reply(err.message, {
-        reply_markup: {
-          inline_keyboard: [[{ text: "Back", callback_data: "main" }]],
-        },
-      });
-    }
-  };
-  return step;
-}
-
-function updateConfirmationStep() {
-  let step = async (ctx) => {
-    try {
-      console.log("coming to confirmation Type");
-      let query;
-      let shouldEdit = true;
-      let title = "";
-      if (ctx.message) {
-        if (ctx.message.text && !ctx.wizard.state.firstEntry) {
-          let id = ctx.update.message.message_id;
-          console.log("id", id);
-          await deleteMessage(ctx, bot, id);
-          ctx.wizard.state.message = MODELS.errors.textInsteadOfInline.text;
-        } else if (ctx.wizard.state.helpMode) {
-          let id = ctx.update.message.message_id;
-          await deleteMessage(ctx, bot, id);
-        }
-      }
-      ctx.wizard.state.firstEntry = false;
-
-      // check if the ctx came from the inline keyboard
-      if (ctx.update.callback_query) {
-        query = ctx.update.callback_query.data;
-        console.log(query);
-      }
-
-      if (query === "main") {
-        await mainMenu(ctx, bot);
-        return ctx.scene.leave();
-      }
-      if (query === "yes") {
-        let priceStrategy = {};
-        if (ctx.wizard.state.data?.priceStrategyType) {
-          priceStrategy.type = ctx.wizard.state.data.priceStrategyType;
-          // get the threshold from the database which will not store as an undefied
-          priceStrategy.threshold =
-            ctx.wizard.state.pair?.priceStrategy.threshold;
-        }
-
-        if (ctx.wizard.state.data?.priceStrategyThreshold) {
-          priceStrategy.threshold =
-            ctx.wizard.state.data.priceStrategyThreshold;
-          priceStrategy.type = ctx.wizard.state.pair?.priceStrategy.type;
-        }
-
-        if (!priceStrategy.type && !priceStrategy.threshold) {
-          console.log(priceStrategy);
-          priceStrategy = undefined;
-        }
-
-        // let priceStrategy = {
-        //   type: ctx.wizard.state.data.priceStrategyType,
-        //   threshold: ctx.wizard.state.data.priceStrategyThreshold,
-        // };
-        let dataToSave = {};
-        dataToSave["base"] = ctx.wizard.state.data.base;
-        dataToSave["quote"] = ctx.wizard.state.data.quote;
-        dataToSave["limit"] = ctx.wizard.state.data.limit;
-        dataToSave["threshold"] = ctx.wizard.state.data.threshold;
-        dataToSave["orderTimeout"] = ctx.wizard.state.data.orderTimeout;
-        dataToSave["buySellDiff"] = ctx.wizard.state.data.buySellDiff;
-        dataToSave["priceStrategy"] = priceStrategy;
-        dataToSave["pair"] =
-          ctx.wizard.state.data.base + "-" + ctx.wizard.state.data.quote;
-        dataToSave["symbol"] =
-          ctx.wizard.state.data.base + ctx.wizard.state.data.quote;
-        dataToSave["buySellDiff"] = ctx.wizard.state.data.buySellDiff;
-        dataToSave["engineName"] = ctx.wizard.state.data.engine;
-        dataToSave["engine"] = ctx.wizard.state.data.engine;
-        dataToSave["sandbox"] = true;
-        dataToSave["enable"] = false;
-
-        console.log(dataToSave);
-        await updatePair(
-          dataToSave,
-          ctx.wizard.state.adminId,
-          ctx.wizard.state.pairId
-        );
-
-        await mainMenu(ctx, bot);
-        return ctx.scene.leave();
-      }
-      if (query === "no") {
-        await mainMenu(ctx, bot);
-        return ctx.scene.leave();
-      }
-      if (query === "back_from_confirmation") {
-        ctx.wizard.selectStep(ctx.wizard.cursor - 1);
-        resetStage(ctx);
-        return ctx.wizard.steps[ctx.wizard.cursor](ctx);
-      }
-      let dataToPrint = "";
-      const dataKeys = Object.keys(ctx.wizard.state.data);
-
-      for (let key of dataKeys) {
-        dataToPrint =
-          dataToPrint +
-          MODELS.pairs[key].name +
-          " : " +
-          ctx.wizard.state.data[key] +
-          "\n";
-      }
-
-      title =
-        ctx.wizard.state.message === undefined
-          ? MODELS.pairs.editConfirmation.title + `\n` + dataToPrint
-          : ctx.wizard.state.message +
-            MODELS.pairs.editConfirmation.title +
-            dataToPrint;
-      if (ctx.wizard.state.title !== title) {
-        ctx.wizard.state.shouldEdit = true;
-        ctx.wizard.state.title = title;
-      }
-      shouldEdit = contentShouldEdit(ctx);
-
-      let keyboard_options = [[]];
-      if (ctx.wizard.state.helpMode) {
-        keyboard_options.push([
-          { text: "back", callback_data: "back_from_help" },
-        ]);
-      } else {
-        for (let option of MODELS.pairs.editConfirmation.options) {
           keyboard_options[0].push({
             text: option.name,
             callback_data: option.id,
@@ -1815,6 +1689,316 @@ function displayInformationsStep(dataType) {
   return step;
 }
 
+function autoStartStep() {
+  const step = async (ctx) => {
+    try {
+      console.log("coming to auto start change");
+      let query;
+      let shouldEdit = true;
+      let title = "";
+      if (ctx.message) {
+        if (ctx.message.text && !ctx.wizard.state.firstEntry) {
+          let id = ctx.update.message.message_id;
+          console.log("id", id);
+          await deleteMessage(ctx, bot, id);
+          ctx.wizard.state.message = MODELS.errors.textInsteadOfInline.text;
+        } else if (ctx.wizard.state.helpMode) {
+          let id = ctx.update.message.message_id;
+          await deleteMessage(ctx, bot, id);
+        }
+      }
+      ctx.wizard.state.firstEntry = false;
+
+      console.log(
+        "The auto start must display",
+        ctx.wizard.state.pair?.autoStart
+      );
+
+      if (ctx.wizard.state.pair?.autoStart !== undefined) {
+        let autoStartToDisplay;
+
+        ctx.wizard.state.pair.autoStart === true
+          ? (autoStartToDisplay = "Enable")
+          : (autoStartToDisplay = "Disable");
+
+        console.log(autoStartToDisplay);
+        ctx.wizard.state.message =
+          MODELS.pairs.autoStart.name + ": " + autoStartToDisplay + "\n\n";
+      }
+
+      if (ctx.update.callback_query) {
+        query = ctx.update.callback_query.data;
+        if (checkOptions(MODELS.pairs.autoStart.options, query)) {
+          ctx.wizard.next();
+
+          // assign the valus to be stored in the database
+          if (query === "enable") {
+            ctx.wizard.state.data.autoStart = true;
+          } else {
+            ctx.wizard.state.data.autoStart = false;
+          }
+
+          resetStage(ctx);
+          return ctx.wizard.steps[ctx.wizard.cursor](ctx);
+        }
+        console.log(query);
+      }
+      // check the query value if yes store the telegram user, if not don't
+
+      if (query === "main") {
+        await mainMenu(ctx, bot);
+        return ctx.scene.leave();
+      }
+      if (query === "back_from_autoStart") {
+        ctx.wizard.selectStep(ctx.wizard.cursor - 1);
+        resetStage(ctx);
+        return ctx.wizard.steps[ctx.wizard.cursor](ctx);
+      }
+
+      if (query === "back_from_help") {
+        ctx.wizard.state.shouldEdit = true;
+        ctx.wizard.state.helpMode = false;
+        ctx.wizard.state.message = undefined;
+      }
+      if (query === "help") {
+        ctx.wizard.state.shouldEdit = true;
+        ctx.wizard.state.helpMode = true;
+        title = MODELS.pairs.autoStart.description;
+        ctx.wizard.state.message = undefined;
+        ctx.wizard.state.title = title;
+      }
+      if (ctx.wizard.state.helpMode) {
+        title = MODELS.pairs.autoStart.description;
+      } else {
+        title =
+          ctx.wizard.state.message === undefined
+            ? MODELS.status.status.title
+            : ctx.wizard.state.message + MODELS.pairs.autoStart.title;
+      }
+      if (ctx.wizard.state.title !== title) {
+        ctx.wizard.state.shouldEdit = true;
+        ctx.wizard.state.title = title;
+      }
+      shouldEdit = contentShouldEdit(ctx);
+
+      let keyboard_options = [[]];
+      if (ctx.wizard.state.helpMode) {
+        keyboard_options.push([
+          { text: "back", callback_data: "back_from_help" },
+        ]);
+      } else {
+        for (let option of MODELS.pairs.autoStart.options) {
+          keyboard_options[0].push({
+            text: option.name,
+            callback_data: option.id,
+          });
+        }
+        keyboard_options.push([{ text: "Help", callback_data: "help" }]);
+        keyboard_options.push([
+          { text: "Back ", callback_data: "back_from_autoStart" },
+        ]);
+        keyboard_options.push([
+          { text: "Back To Home", callback_data: "main" },
+        ]);
+      }
+
+      if (shouldEdit) {
+        await ctx.telegram.editMessageText(
+          ctx.chat.id,
+          ctx.wizard.state.messageToEdit,
+          0,
+          {
+            text: title,
+            inline_message_id: ctx.wizard.state.messageToEdit,
+            reply_markup: {
+              inline_keyboard: keyboard_options,
+            },
+          }
+        );
+      }
+
+      ctx.wizard.state.message = undefined;
+      return;
+    } catch (err) {
+      // reply with the error
+      console.log(err);
+      ctx.reply(err.message, {
+        reply_markup: {
+          inline_keyboard: [[{ text: "Back", callback_data: "main" }]],
+        },
+      });
+    }
+  };
+
+  return step;
+}
+
+function updateConfirmationStep() {
+  let step = async (ctx) => {
+    try {
+      console.log("coming to confirmation Type");
+      let query;
+      let shouldEdit = true;
+      let title = "";
+      if (ctx.message) {
+        if (ctx.message.text && !ctx.wizard.state.firstEntry) {
+          let id = ctx.update.message.message_id;
+          console.log("id", id);
+          await deleteMessage(ctx, bot, id);
+          ctx.wizard.state.message = MODELS.errors.textInsteadOfInline.text;
+        } else if (ctx.wizard.state.helpMode) {
+          let id = ctx.update.message.message_id;
+          await deleteMessage(ctx, bot, id);
+        }
+      }
+      ctx.wizard.state.firstEntry = false;
+
+      // check if the ctx came from the inline keyboard
+      if (ctx.update.callback_query) {
+        query = ctx.update.callback_query.data;
+        console.log(query);
+      }
+
+      if (query === "main") {
+        await mainMenu(ctx, bot);
+        return ctx.scene.leave();
+      }
+      if (query === "yes") {
+        let priceStrategy = {};
+        if (ctx.wizard.state.data?.priceStrategyType) {
+          priceStrategy.type = ctx.wizard.state.data.priceStrategyType;
+          // get the threshold from the database which will not store as an undefied
+          priceStrategy.threshold =
+            ctx.wizard.state.pair?.priceStrategy.threshold;
+        }
+
+        if (ctx.wizard.state.data?.priceStrategyThreshold) {
+          priceStrategy.threshold =
+            ctx.wizard.state.data.priceStrategyThreshold;
+          priceStrategy.type = ctx.wizard.state.pair?.priceStrategy.type;
+        }
+
+        if (!priceStrategy.type && !priceStrategy.threshold) {
+          console.log(priceStrategy);
+          priceStrategy = undefined;
+        }
+
+        // let priceStrategy = {
+        //   type: ctx.wizard.state.data.priceStrategyType,
+        //   threshold: ctx.wizard.state.data.priceStrategyThreshold,
+        // };
+        let dataToSave = {};
+        dataToSave["base"] = ctx.wizard.state.data.base;
+        dataToSave["quote"] = ctx.wizard.state.data.quote;
+        dataToSave["limit"] = ctx.wizard.state.data.limit;
+        dataToSave["threshold"] = ctx.wizard.state.data.threshold;
+        dataToSave["orderTimeout"] = ctx.wizard.state.data.orderTimeout;
+        dataToSave["buySellDiff"] = ctx.wizard.state.data.buySellDiff;
+        dataToSave["priceStrategy"] = priceStrategy;
+        dataToSave["pair"] =
+          ctx.wizard.state.data.base + "-" + ctx.wizard.state.data.quote;
+        dataToSave["symbol"] =
+          ctx.wizard.state.data.base + ctx.wizard.state.data.quote;
+        dataToSave["buySellDiff"] = ctx.wizard.state.data.buySellDiff;
+        dataToSave["engineName"] = ctx.wizard.state.data.engine;
+        dataToSave["engine"] = ctx.wizard.state.data.engine;
+        dataToSave["autoStart"] = ctx.wizard.state.data.autoStart;
+        dataToSave["sandbox"] = true;
+        dataToSave["enable"] = false;
+
+        console.log(dataToSave);
+        await updatePair(
+          dataToSave,
+          ctx.wizard.state.adminId,
+          ctx.wizard.state.pairId
+        );
+
+        await mainMenu(ctx, bot);
+        return ctx.scene.leave();
+      }
+      if (query === "no") {
+        await mainMenu(ctx, bot);
+        return ctx.scene.leave();
+      }
+      if (query === "back_from_confirmation") {
+        ctx.wizard.selectStep(ctx.wizard.cursor - 1);
+        resetStage(ctx);
+        return ctx.wizard.steps[ctx.wizard.cursor](ctx);
+      }
+      let dataToPrint = "";
+      const dataKeys = Object.keys(ctx.wizard.state.data);
+
+      for (let key of dataKeys) {
+        dataToPrint =
+          dataToPrint +
+          MODELS.pairs[key].name +
+          " : " +
+          ctx.wizard.state.data[key] +
+          "\n";
+      }
+
+      title =
+        ctx.wizard.state.message === undefined
+          ? MODELS.pairs.editConfirmation.title + `\n` + dataToPrint
+          : ctx.wizard.state.message +
+            MODELS.pairs.editConfirmation.title +
+            dataToPrint;
+      if (ctx.wizard.state.title !== title) {
+        ctx.wizard.state.shouldEdit = true;
+        ctx.wizard.state.title = title;
+      }
+      shouldEdit = contentShouldEdit(ctx);
+
+      let keyboard_options = [[]];
+      if (ctx.wizard.state.helpMode) {
+        keyboard_options.push([
+          { text: "back", callback_data: "back_from_help" },
+        ]);
+      } else {
+        for (let option of MODELS.pairs.editConfirmation.options) {
+          keyboard_options[0].push({
+            text: option.name,
+            callback_data: option.id,
+          });
+        }
+        keyboard_options.push([
+          { text: "Back ", callback_data: "back_from_confirmation" },
+        ]);
+        keyboard_options.push([
+          { text: "Back To Home", callback_data: "main" },
+        ]);
+      }
+
+      if (shouldEdit) {
+        await ctx.telegram.editMessageText(
+          ctx.chat.id,
+          ctx.wizard.state.messageToEdit,
+          0,
+          {
+            text: title,
+            inline_message_id: ctx.wizard.state.messageToEdit,
+            reply_markup: {
+              inline_keyboard: keyboard_options,
+            },
+          }
+        );
+      }
+
+      ctx.wizard.state.message = undefined;
+      return;
+    } catch (err) {
+      // reply with the error
+      console.log(err);
+      ctx.reply(err.message, {
+        reply_markup: {
+          inline_keyboard: [[{ text: "Back", callback_data: "main" }]],
+        },
+      });
+    }
+  };
+  return step;
+}
+
 module.exports = {
   selectPairStep,
   engineStep,
@@ -1829,4 +2013,5 @@ module.exports = {
   confirmationStep,
   updateConfirmationStep,
   displayInformationsStep,
+  autoStartStep,
 };

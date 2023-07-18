@@ -165,6 +165,19 @@ let MODELS = {
         "You have to choose one of your pair to complete your operation",
       title: "Please choose from one of the below pairs",
     },
+    autoStart: {
+      name: "Auto Start Engine",
+      mandatory: true,
+      type: "option",
+      shouldAsk: true,
+      title: "Please enable or disable the auto start trading",
+      description:
+        "Auto start feature give you a choise to let the engine work once you filled the balance after finishing\n\nExample: if the engine work on specific pair and the balance finish the engine will stop automaticaly, with this feature the engine will work auto once the balance send",
+      options: [
+        { id: "enable", name: "Enable" },
+        { id: "disable", name: "Disable" },
+      ],
+    },
   },
   status: {
     reason: {
@@ -264,7 +277,7 @@ let MODELS = {
         { id: "no", name: "No" },
       ],
     },
-    editConfirmation: {
+    updateConfirmation: {
       name: "Confirmation The edition",
       mandatory: true,
       type: "number",
@@ -272,7 +285,7 @@ let MODELS = {
       title:
         "Please Check the settings and confirm,After confirmation The report will be updated",
       options: [
-        { id: "yes", name: "Yes" },
+        { id: "update", name: "Yes" },
         { id: "no", name: "No" },
       ],
     },
@@ -287,6 +300,16 @@ let MODELS = {
         { id: "yes", name: "Yes" },
         { id: "no", name: "No" },
       ],
+    },
+    deleteEmails: {
+      name: "Deleted Emails",
+      mandatory: true,
+      type: "String",
+      shouldAsk: true,
+      title:
+        "Please click on the email that you want to delete, when you finishing deleting the emails Please click Next",
+      description:
+        "You can remove one or more than one email in this step, click on the email that want to delete and then click Next",
     },
     reportList: {
       name: "List reports",
@@ -406,12 +429,14 @@ let MODELS = {
       shouldAsk: true,
       title:
         "Please Check the settings and confirm,After confirmation The account will be deleted",
+
       options: [
         { id: "yes", name: "Yes" },
         { id: "no", name: "No" },
       ],
     },
   },
+
   user: {
     email: {
       name: "Email",
