@@ -173,7 +173,7 @@ const updateUserName = async (ctx) => {
 // access                   Public
 const signInUser = async (email, password) => {
   try {
-    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.API_KEY_FIREBASE}`;
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.API_KEY_FIREBASE_FALCONS}`;
     console.log("the user", email);
     console.log("the password", password);
     const res = await axios.post(url, {

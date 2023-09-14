@@ -153,7 +153,7 @@ let MODELS = {
       mandatory: true,
       type: "string",
       shouldAsk: true,
-      title: "Display The pair infromation related to the choosen option",
+      title: "Display The pair infromation related to the choosen option\n",
       options: [{ id: "back_from_displayingInformation", name: "Back" }],
     },
     pairList: {

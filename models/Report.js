@@ -64,6 +64,7 @@ const getReports = async (adminId, pairId) => {
       .collection("pairs")
       .doc(pairId)
       .collection("reports")
+      .where("sandbox", "==", true)
       .get();
 
     if (reportsSnapshot.empty) {

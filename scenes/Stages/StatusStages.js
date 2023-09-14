@@ -172,6 +172,7 @@ function updateStatusConfirmationStep() {
         let dataToSave = {};
         dataToSave["status"] = ctx.wizard.state.data.status;
         dataToSave["reason"] = ctx.wizard.state.data.reason;
+        dataToSave["sandbox"] = true;
 
         console.log(dataToSave);
         await updateStatus(

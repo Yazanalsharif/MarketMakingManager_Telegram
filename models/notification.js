@@ -10,6 +10,7 @@ const getNotifications = async (adminId) => {
       .collection("admins")
       .doc(adminId)
       .collection("Notification")
+      .where("sandbox", "==", true)
       .get();
 
     if (notificationSnapshot.empty) {

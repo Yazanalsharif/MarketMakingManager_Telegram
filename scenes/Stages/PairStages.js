@@ -103,6 +103,7 @@ function selectPairStep(back = "back") {
         return ctx.scene.leave();
       }
 
+      // refactor this condations by making loop on it
       if (query === "back_from_selectPair") {
         console.log(back);
         if (back === "back") {
@@ -1555,13 +1556,16 @@ function displayInformationsStep(dataType) {
         );
 
         // Check if the status exist // to be edit to the same way
-        if (!status) {
-          throw new Error(
-            "There are no status for the pair, Please add a status or check the admin"
-          );
+        if (status) {
+          ctx.wizard.state.data.status = status[0].data.status;
+          ctx.wizard.state.data.reason = status[0].data.reason;
+          // throw new Error(
+          //   "There are no status for the pair, Please add a status or check the admin"
+          // );
+        } else {
+          ctx.wizard.state.message =
+            "There are no status for the pair, Please add a status or check the admin\n\n";
         }
-        ctx.wizard.state.data.status = status[0].data.status;
-        ctx.wizard.state.data.reason = status[0].data.reason;
       }
 
       if (dataType === "reportConfig") {

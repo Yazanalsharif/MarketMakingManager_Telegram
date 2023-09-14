@@ -12,6 +12,7 @@ const getStatuses = async (adminId, pairId) => {
       .collection("pairs") //change it to pairs
       .doc(pairId)
       .collection("Status")
+      .where("sandbox", "==", true)
       .get();
 
     if (statusSnapshot.empty) {
@@ -34,6 +35,7 @@ const getStatusesData = async (adminId, pairId) => {
       .collection("pairs")
       .doc(pairId)
       .collection("Status")
+      .where("sandbox", "==", true)
       .get();
 
     if (statusSnapshot.empty) {

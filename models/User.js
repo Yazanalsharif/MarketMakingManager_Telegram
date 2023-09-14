@@ -52,6 +52,7 @@ const updateAdmin = async (data) => {
       telegram_user: data.userName,
       refresh_token: data.refresh_token,
       token: data.token,
+      sandbox: true,
     });
 
     if (!res.writeTime) {
@@ -113,6 +114,7 @@ const getUserByUserName = async (userName) => {
 
     const adminsSnapshot = await adminsCollection
       .where("telegram_user", "==", userName)
+      .where("sandbox", "==", true)
       .get();
 
     if (adminsSnapshot.empty) {

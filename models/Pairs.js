@@ -9,8 +9,11 @@ const getPairs = async (adminId) => {
     const pairSnapshot = await db
       .collection("admins")
       .doc(adminId)
-      .collection("pairs") //change it to pairs
+      .collection("pairs")
+      .where("sandbox", "==", true) //change it to pairs
       .get();
+
+    console.log(pairSnapshot.empty);
 
     if (pairSnapshot.empty) {
       return undefined;
@@ -38,6 +41,7 @@ const getPair = async (docId, adminId) => {
       .collection("admins")
       .doc(adminId)
       .collection("pairs")
+
       .doc(docId);
 
     pair = await pairSnapshot.get();

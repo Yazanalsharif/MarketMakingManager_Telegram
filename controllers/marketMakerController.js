@@ -310,6 +310,16 @@ const getPairData = async (ctx) => {
 
     let msg = `The Pairs informations below`;
 
+    // if the pairs doesn't exist then it will display a doesn't exist message
+    if (!pairs) {
+      msg = "There are no pairs to display, Please create new pair";
+      return await ctx.editMessageText(msg, {
+        reply_markup: {
+          inline_keyboard: [[{ text: "Back", callback_data: "pairList" }]],
+        },
+      });
+    }
+
     for (let i = 0; i < pairs.length; i++) {
       pairs[i].reportConfiges = await getReports(adminId, pairs[0].id);
       pairs[i].statuses = await getStatusesData(adminId, pairs[i].id);
@@ -428,6 +438,7 @@ const enableNotification = async (ctx, bot) => {
 
     const data = {
       enable: true,
+      sandbox: true,
     };
     // update the user
     await updateNotification(data, adminId);
@@ -448,6 +459,7 @@ const disableNotification = async (ctx, bot) => {
 
     const data = {
       enable: false,
+      sandbox: true,
     };
     // update the user
     await updateNotification(data, adminId);
@@ -490,6 +502,7 @@ const notificationStart = async (ctx) => {
     const data = {
       chat_id_Notifi: ctx.chat.id,
       enable: true,
+      sandbox: true,
     };
     // update the user
     await updateNotification(data, adminId);

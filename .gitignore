@@ -7,3 +7,6 @@ config/config.json
 text.txt
 trash.txt
 trash.js
+Notes.txt
+config/falconsFirebaseConfig.json
+config/testFirbase.json

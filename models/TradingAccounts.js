@@ -27,7 +27,8 @@ const addNewAccount = async (data) => {
     data.id = accountSnapShotDoc.id;
     console.log(data.id);
     // check duplication
-    const result = await accountSnapShotDoc.add(data);
+    console.log(data);
+    const result = await accountSnapShotDoc.set(data);
     return result;
   } catch (err) {
     console.log(err);
@@ -41,6 +42,7 @@ const getAccounts = async (adminId) => {
     const accountsSnapShot = await db
       .collection("accounts")
       .where("admin", "==", adminId)
+      .where("sandbox", "==", true)
       .get();
 
     if (accountsSnapShot.empty) {

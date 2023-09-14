@@ -688,12 +688,13 @@ function addTradingAccountConfirmation() {
             secret: ctx.wizard.state.data.secret,
           },
           authVersion: 2,
-          baseUrl: "https://api.kucoin.com",
+          baseUrl: "https://openapi-v2.kucoin.com",
         };
 
         // get the admin Id
         const adminId = await getAdmin(ctx);
 
+        console.log(ctx.wizard.state.data.platform);
         // get engine data
         const engine = await getEngineData(ctx.wizard.state.data.platform);
 
@@ -708,7 +709,7 @@ function addTradingAccountConfirmation() {
         dataToSave["sandbox"] = true;
         dataToSave["credential"] = credential;
 
-        console.log(dataToSave);
+        console.log(`dataToSave ${dataToSave}`);
         // add new account
         const account = await addNewAccount(dataToSave);
 
@@ -720,6 +721,7 @@ function addTradingAccountConfirmation() {
           return ctx.scene.leave();
         }
       }
+
       if (query === "no") {
         await mainMenu(ctx, bot);
         return ctx.scene.leave();
